@@ -430,9 +430,6 @@ namespace EDDiscovery.EliteDangerous
         {
 
         }
-        public static void UpdateMapColour(long journalid, int mapcolour)
-        {
-        }
 
         public static void UpdateSyncFlagBit(long journalid, SyncFlags bit, bool value)
         {
@@ -499,33 +496,32 @@ namespace EDDiscovery.EliteDangerous
         public JObject jEventData { get; protected set; }       // event objects
         public string EventDataString { get { return jEventData.ToString(); } }     // Get only, functions will modify them to add additional data on
 
+        public JournalEntryDB(JournalEntry jep, JObject jo )
+        {
+            je = jep;
+            jEventData = jo;
+        }
+
         public static JournalEntryDB Create(string s )
         {
-            JournalEntryDB jdb = new JournalEntryDB();
-            jdb.jEventData = (JObject)JObject.Parse(s);
-            jdb.je = JournalEntry.CreateJournalEntry(jdb.jEventData);
-            return jdb;
+            JObject jo = (JObject)JObject.Parse(s);
+            return new JournalEntryDB(JournalEntry.CreateJournalEntry(jo), jo);
         }
 
         static JournalEntryDB Create(DbDataReader dr)
         {
-            JournalEntryDB jdb = new JournalEntryDB();
-            jdb.jEventData = (JObject)JObject.Parse((string)dr["EventData"]);
-            jdb.je = JournalEntry.CreateJournalEntry(dr, jdb.jEventData);
-            return jdb;
+            JObject jo = (JObject)JObject.Parse((string)dr["EventData"]);
+            return new JournalEntryDB(JournalEntry.CreateJournalEntry(dr, jo), jo);
         }
 
         static JournalEntryDB Create(DataRow dr)
         {
-            JournalEntryDB jdb = new JournalEntryDB();
-            jdb.jEventData = (JObject)JObject.Parse((string)dr["EventData"]);
-            jdb.je = JournalEntry.CreateJournalEntry(dr, jdb.jEventData);
-            return jdb;
+            JObject jo = (JObject)JObject.Parse((string)dr["EventData"]);
+            return new JournalEntryDB(JournalEntry.CreateJournalEntry(dr, jo), jo);
         }
 
         public static JournalEntryDB CreateFSDJournalEntry(long tluid, int cmdrid, DateTime utc, string name, double x, double y, double z, int mc, int syncflag)
         {
-            JournalEntryDB jdb = new JournalEntryDB();
 
             JObject jo = new JObject();
             jo["timestamp"] = utc.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
@@ -533,8 +529,7 @@ namespace EDDiscovery.EliteDangerous
             jo["StarSystem"] = name;
             jo["StarPos"] = new JArray(x, y, z);
             jo["EDDMapColor"] = mc;
-            jdb.jEventData = jo;
-            jdb.je = JournalEntry.CreateJournalEntry(jo);
+            JournalEntryDB jdb = new JournalEntryDB(JournalEntry.CreateJournalEntry(jo), jo);
             jdb.je.TLUId = tluid;
             jdb.je.CommanderId = cmdrid;
             jdb.je.Synced = syncflag;
@@ -932,5 +927,11 @@ namespace EDDiscovery.EliteDangerous
             }
             return true;
         }
+
+        public static void UpdateMapColour(long journalid, int mapcolour)
+        {
+        }
+
+
     }
 }

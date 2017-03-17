@@ -152,7 +152,8 @@ namespace EDDiscovery
 
                             if (!(previssame || nextissame))
                             {
-//TBD                                je.Add(cn, tn);
+                                JournalEntryDB jb = new JournalEntryDB(je,jo);
+                                jb.Add(cn, tn);
 //                                System.Diagnostics.Debug.WriteLine("Add {0} {1}", je.EventTimeUTC, je.EventDataString);
                             }
                         }
