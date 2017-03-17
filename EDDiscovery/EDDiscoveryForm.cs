@@ -687,7 +687,7 @@ namespace EDDiscovery
                                 "You can manually change one EDSM assigned system by right clicking on the travel history and selecting the option"
                                 , "WARNING", MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
-                EliteDangerous.JournalEntry.ClearEDSMID(EDDConfig.CurrentCommander.Nr);
+                EliteDangerous.JournalEntryDB.ClearEDSMID(EDDConfig.CurrentCommander.Nr);
                 SystemNoteClass.ClearEDSMID();
             }
 
@@ -751,7 +751,7 @@ namespace EDDiscovery
         {
             if (EDDiscovery.Forms.MessageBoxTheme.Show("Confirm you wish to reset all history entries to the current commander", "WARNING", MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
-                EliteDangerous.JournalEntry.ResetCommanderID(-1, EDDConfig.CurrentCommander.Nr);
+                EliteDangerous.JournalEntryDB.ResetCommanderID(-1, EDDConfig.CurrentCommander.Nr);
                 Controller.RefreshHistoryAsync();
             }
         }
@@ -784,7 +784,7 @@ namespace EDDiscovery
         {
             if (EDDiscovery.Forms.MessageBoxTheme.Show("Confirm you remove any duplicate FSD entries from the current commander", "WARNING", MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
-                int n = EliteDangerous.JournalEntry.RemoveDuplicateFSDEntries(EDDConfig.CurrentCommander.Nr);
+                int n = EliteDangerous.JournalEntryDB.RemoveDuplicateFSDEntries(EDDConfig.CurrentCommander.Nr);
                 Controller.LogLine("Removed " + n + " FSD entries");
                 Controller.RefreshHistoryAsync();
             }

@@ -22,10 +22,13 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
     [JournalEntryType(JournalTypeEnum.EDDItemSet)]
     public class JournalEDDItemSet : JournalEntry, IMaterialCommodityJournalEntry
     {
+        JObject jEventData;
+
         public JournalEDDItemSet(JObject evt) : base(evt, JournalTypeEnum.EDDItemSet)
         {
             Materials = new MaterialList(evt["Materials"]?.ToObject<MaterialItem[]>().ToList());
             Commodities = new CommodityList(evt["Commodities"]?.ToObject<CommodityItem[]>().ToList());
+            jEventData = evt;
         }
 
         public MaterialList Materials { get; set; }

@@ -283,13 +283,10 @@ namespace EDDiscovery.EliteDangerous
 
         public long EdsmID;                      // 0 = unassigned, >0 = assigned
 
-        public JObject jEventData { get; protected set; }       // event objects
-        public string EventDataString { get { return jEventData.ToString(); } }     // Get only, functions will modify them to add additional data on
-
-        private int Synced;                     // sync flags
+        public int Synced;                     // sync flags
 
         public DateTime EventTimeLocal { get { return EventTimeUTC.ToLocalTime(); } }
-        
+
         public bool SyncedEDSM { get { return (Synced & (int)SyncFlags.EDSM) != 0; } }
         public bool SyncedEDDN { get { return (Synced & (int)SyncFlags.EDDN) != 0; } }
         public bool StartMarker { get { return (Synced & (int)SyncFlags.StartMarker) != 0; } }
@@ -335,18 +332,33 @@ namespace EDDiscovery.EliteDangerous
 
         public JournalEntry(JObject jo, JournalTypeEnum jtype)
         {
-            jEventData = jo;
             EventTypeID = jtype;
             EventTypeStr = jtype.ToString();
             EventTimeUTC = DateTime.Parse(jo.Value<string>("timestamp"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
             TLUId = 0;
         }
 
-        static public JournalEntry CreateJournalEntry(DataRow dr)
+        public static JournalEntry CreateJournalEntry(JObject jo)
         {
-            string EDataString = (string)dr["EventData"];
+            string Eventstr = JSONHelper.GetStringNull(jo["event"]);
 
-            JournalEntry jr = JournalEntry.CreateJournalEntry(EDataString);     // this sets EventTypeId, EventTypeStr and UTC via constructor above.. 
+            if (Eventstr == null)  // Should normaly not happend unless corrupt string.
+                return null;
+
+            Type jtype = TypeOfJournalEntry(Eventstr);
+
+            if (jtype == null)
+            {
+                System.Diagnostics.Trace.WriteLine("Unknown event: " + Eventstr);
+                return new JournalUnknown(jo, Eventstr);
+            }
+            else
+                return (JournalEntry)Activator.CreateInstance(jtype, jo);
+        }
+
+        static public JournalEntry CreateJournalEntry(DataRow dr, JObject jo)
+        {
+            JournalEntry jr = JournalEntry.CreateJournalEntry(jo);     // this sets EventTypeId, EventTypeStr and UTC via constructor above.. 
 
             jr.Id = (int)(long)dr["Id"];
             jr.TLUId = (int)(long)dr["TravelLogId"];
@@ -358,11 +370,9 @@ namespace EDDiscovery.EliteDangerous
             return jr;
         }
 
-        static public JournalEntry CreateJournalEntry(DbDataReader dr)
+        static public JournalEntry CreateJournalEntry(DbDataReader dr, JObject jo)
         {
-            string EDataString = (string)dr["EventData"];
-
-            JournalEntry jr = JournalEntry.CreateJournalEntry(EDataString);
+            JournalEntry jr = JournalEntry.CreateJournalEntry(jo);
 
             jr.Id = (int)(long)dr["Id"];
             jr.TLUId = (int)(long)dr["TravelLogId"];
@@ -375,25 +385,161 @@ namespace EDDiscovery.EliteDangerous
             return jr;
         }
 
-        public static JournalEntry CreateFSDJournalEntry(long tluid, int cmdrid, DateTime utc, string name, double x, double y, double z, int mc, int syncflag)
+        static public Type TypeOfJournalEntry(string text)
         {
+            //foreach (JournalTypeEnum jte in Enum.GetValues(typeof(JournalTypeEnum))) // check code only to make sure names match
+            //{
+            //Type p = Type.GetType("EDDiscovery.EliteDangerous.JournalEvents.Journal" + jte.ToString());
+            //Debug.Assert(p != null);
+            //}
+
+            Type t = Type.GetType("EDDiscovery.EliteDangerous.JournalEvents.Journal" + text, false, true); // no exception, ignore case here
+            return t;
+        }
+
+        static public Type TypeOfJournalEntry(JournalTypeEnum type)
+        {
+            if (JournalEntryTypes.ContainsKey(type))
+            {
+                return JournalEntryTypes[type];
+            }
+            else
+            {
+                return TypeOfJournalEntry(type.ToString());
+            }
+        }
+
+        #endregion
+
+        #region Misc
+
+        static public JournalTypeEnum JournalString2Type(string str)
+        {
+            foreach (JournalTypeEnum mat in Enum.GetValues(typeof(JournalTypeEnum)))
+            {
+                if (str.ToLower().Equals(mat.ToString().ToLower()))
+                    return mat;
+            }
+
+            return JournalTypeEnum.Unknown;
+        }
+
+        #endregion
+
+        public static void UpdateEDSMIDPosJump(long journalid, ISystem system, bool jsonpos, double dist, SQLiteConnectionUser cn = null, DbTransaction tn = null)
+        {
+
+        }
+        public static void UpdateMapColour(long journalid, int mapcolour)
+        {
+        }
+
+        public static void UpdateSyncFlagBit(long journalid, SyncFlags bit, bool value)
+        {
+        }
+
+        public static void UpdateCommanderID(long journalid, int cmdrid)
+        {
+            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
+            {
+                using (DbCommand cmd = cn.CreateCommand("Update JournalEntries set CommanderID = @cmdrid where ID=@journalid"))
+                {
+                    cmd.AddParameterWithValue("@journalid", journalid);
+                    cmd.AddParameterWithValue("@cmdrid", cmdrid);
+                    System.Diagnostics.Trace.WriteLine(string.Format("Update cmdr id ID {0} with map colour", journalid));
+                    SQLiteDBClass.SQLNonQueryText(cn, cmd);
+                }
+            }
+        }
+
+        public static long AddEDDItemSet(int cmdrid, DateTime dt, long jidofitemset, List<MaterialCommodities> changelist)     // add item, return journal ID
+        {
+            return 0;
+        }
+
+        static public List<string> GetListOfEventsWithOptMethod(bool towords, string method = null, string method2 = null)
+        {
+            List<string> ret = new List<string>();
+
+            foreach (JournalTypeEnum jte in Enum.GetValues(typeof(JournalTypeEnum)))
+            {
+                string n = jte.ToString();
+
+                if (method == null)
+                {
+                    ret.Add((towords) ? n.SplitCapsWord() : n);
+                }
+                else
+                {
+                    Type jtype = TypeOfJournalEntry(jte);
+
+                    if (jtype != null)      // may be null, Unknown for instance
+                    {
+                        System.Reflection.MethodInfo m = jtype.GetMethod(method);
+
+                        if (m == null && method2 != null)
+                            m = jtype.GetMethod(method2);
+
+                        if (m != null)
+                            ret.Add((towords) ? n.SplitCapsWord() : n);
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+
+    }
+
+    public class JournalEntryDB
+    {
+        public JournalEntry je;
+
+        public JObject jEventData { get; protected set; }       // event objects
+        public string EventDataString { get { return jEventData.ToString(); } }     // Get only, functions will modify them to add additional data on
+
+        public static JournalEntryDB Create(string s )
+        {
+            JournalEntryDB jdb = new JournalEntryDB();
+            jdb.jEventData = (JObject)JObject.Parse(s);
+            jdb.je = JournalEntry.CreateJournalEntry(jdb.jEventData);
+            return jdb;
+        }
+
+        static JournalEntryDB Create(DbDataReader dr)
+        {
+            JournalEntryDB jdb = new JournalEntryDB();
+            jdb.jEventData = (JObject)JObject.Parse((string)dr["EventData"]);
+            jdb.je = JournalEntry.CreateJournalEntry(dr, jdb.jEventData);
+            return jdb;
+        }
+
+        static JournalEntryDB Create(DataRow dr)
+        {
+            JournalEntryDB jdb = new JournalEntryDB();
+            jdb.jEventData = (JObject)JObject.Parse((string)dr["EventData"]);
+            jdb.je = JournalEntry.CreateJournalEntry(dr, jdb.jEventData);
+            return jdb;
+        }
+
+        public static JournalEntryDB CreateFSDJournalEntry(long tluid, int cmdrid, DateTime utc, string name, double x, double y, double z, int mc, int syncflag)
+        {
+            JournalEntryDB jdb = new JournalEntryDB();
+
             JObject jo = new JObject();
             jo["timestamp"] = utc.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
             jo["event"] = "FSDJump";
             jo["StarSystem"] = name;
             jo["StarPos"] = new JArray(x, y, z);
             jo["EDDMapColor"] = mc;
-
-            JournalEntry je = CreateJournalEntry(jo.ToString());
-            je.TLUId = tluid;
-            je.CommanderId = cmdrid;
-            je.Synced = syncflag;
-            return je;
+            jdb.jEventData = jo;
+            jdb.je = JournalEntry.CreateJournalEntry(jo);
+            jdb.je.TLUId = tluid;
+            jdb.je.CommanderId = cmdrid;
+            jdb.je.Synced = syncflag;
+            return jdb;
         }
-
-        #endregion
-
-        #region DB
 
         public bool Add()
         {
@@ -408,20 +554,20 @@ namespace EDDiscovery.EliteDangerous
         {
             using (DbCommand cmd = cn.CreateCommand("Insert into JournalEntries (EventTime, TravelLogID, CommanderId, EventTypeId , EventType, EventData, EdsmId, Synced) values (@EventTime, @TravelLogID, @CommanderID, @EventTypeId , @EventStrName, @EventData, @EdsmId, @Synced)", tn))
             {
-                cmd.AddParameterWithValue("@EventTime", EventTimeUTC);           // MUST use UTC connection
-                cmd.AddParameterWithValue("@TravelLogID", TLUId);
-                cmd.AddParameterWithValue("@CommanderID", CommanderId);
-                cmd.AddParameterWithValue("@EventTypeId", EventTypeID);
-                cmd.AddParameterWithValue("@EventStrName", EventTypeStr);
+                cmd.AddParameterWithValue("@EventTime", je.EventTimeUTC);           // MUST use UTC connection
+                cmd.AddParameterWithValue("@TravelLogID", je.TLUId);
+                cmd.AddParameterWithValue("@CommanderID", je.CommanderId);
+                cmd.AddParameterWithValue("@EventTypeId", je.EventTypeID);
+                cmd.AddParameterWithValue("@EventStrName", je.EventTypeStr);
                 cmd.AddParameterWithValue("@EventData", EventDataString);
-                cmd.AddParameterWithValue("@EdsmId", EdsmID);
-                cmd.AddParameterWithValue("@Synced", Synced);
+                cmd.AddParameterWithValue("@EdsmId", je.EdsmID);
+                cmd.AddParameterWithValue("@Synced", je.Synced);
 
                 SQLiteDBClass.SQLNonQueryText(cn, cmd);
 
                 using (DbCommand cmd2 = cn.CreateCommand("Select Max(id) as id from JournalEntries"))
                 {
-                    Id = (int)(long)SQLiteDBClass.SQLScalar(cn, cmd2);
+                    je.Id = (int)(long)SQLiteDBClass.SQLScalar(cn, cmd2);
                 }
                 return true;
             }
@@ -439,15 +585,15 @@ namespace EDDiscovery.EliteDangerous
         {
             using (DbCommand cmd = cn.CreateCommand("Update JournalEntries set EventTime=@EventTime, TravelLogID=@TravelLogID, CommanderID=@CommanderID, EventTypeId=@EventTypeId, EventType=@EventStrName, EventData=@EventData, EdsmId=@EdsmId, Synced=@Synced where ID=@id", tn))
             {
-                cmd.AddParameterWithValue("@ID", Id);
-                cmd.AddParameterWithValue("@EventTime", EventTimeUTC);  // MUST use UTC connection
-                cmd.AddParameterWithValue("@TravelLogID", TLUId);
-                cmd.AddParameterWithValue("@CommanderID", CommanderId);
-                cmd.AddParameterWithValue("@EventTypeId", EventTypeID);
-                cmd.AddParameterWithValue("@EventStrName", EventTypeStr);
+                cmd.AddParameterWithValue("@ID", je.Id);
+                cmd.AddParameterWithValue("@EventTime", je.EventTimeUTC);  // MUST use UTC connection
+                cmd.AddParameterWithValue("@TravelLogID", je.TLUId);
+                cmd.AddParameterWithValue("@CommanderID", je.CommanderId);
+                cmd.AddParameterWithValue("@EventTypeId", je.EventTypeID);
+                cmd.AddParameterWithValue("@EventStrName", je.EventTypeStr);
                 cmd.AddParameterWithValue("@EventData", EventDataString);
-                cmd.AddParameterWithValue("@EdsmId", EdsmID);
-                cmd.AddParameterWithValue("@Synced", Synced);
+                cmd.AddParameterWithValue("@EdsmId", je.EdsmID);
+                cmd.AddParameterWithValue("@Synced", je.Synced);
                 SQLiteDBClass.SQLNonQueryText(cn, cmd);
 
                 return true;
@@ -471,161 +617,16 @@ namespace EDDiscovery.EliteDangerous
             }
         }
 
-        //dist >0 to update
-        public static void UpdateEDSMIDPosJump(long journalid, ISystem system, bool jsonpos, double dist, SQLiteConnectionUser cn = null, DbTransaction tn = null)
-        {
-            bool ownconn = false;
 
-            try
-            {
-                if (cn == null)
-                {
-                    ownconn = true;
-                    cn = new SQLiteConnectionUser(utc: true);
-                }
-
-                JournalEntry ent = Get(journalid, cn, tn);
-
-                if (ent != null)
-                {
-                    JObject jo = ent.jEventData;
-
-                    if (jsonpos)
-                    {
-                        jo["StarPos"] = new JArray() { system.x, system.y, system.z };
-                        jo["StarPosFromEDSM"] = true;
-                    }
-
-                    if (dist > 0)
-                        jo["JumpDist"] = dist;
-
-                    using (DbCommand cmd2 = cn.CreateCommand("Update JournalEntries set EventData = @EventData, EdsmId = @EdsmId where ID = @ID", tn))
-                    {
-                        cmd2.AddParameterWithValue("@ID", journalid);
-                        cmd2.AddParameterWithValue("@EventData", jo.ToString());
-                        cmd2.AddParameterWithValue("@EdsmId", system.id_edsm);
-
-                        //System.Diagnostics.Trace.WriteLine(string.Format("Update journal ID {0} with pos {1}/edsmid {2} dist {3}", journalid, jsonpos, system.id_edsm, dist));
-                        cmd2.ExecuteNonQuery();
-                    }
-                }
-            }
-            finally
-            {
-                if (ownconn)
-                {
-                    cn.Dispose();
-                }
-            }
-        }
-
-        public static void UpdateMapColour(long journalid, int mapcolour)
+        static public JournalEntryDB GetDB(long journalid)
         {
             using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
             {
-                JournalEntry ent = Get(journalid, cn);
-
-                if (ent != null)
-                {
-                    JObject jo = ent.jEventData;
-
-                    jo["EDDMapColor"] = mapcolour;
-
-                    using (DbCommand cmd2 = cn.CreateCommand("Update JournalEntries set EventData = @EventData where ID = @ID"))
-                    {
-                        cmd2.AddParameterWithValue("@ID", journalid);
-                        cmd2.AddParameterWithValue("@EventData", jo.ToString());
-
-                        System.Diagnostics.Trace.WriteLine(string.Format("Update journal ID {0} with map colour", journalid));
-                        SQLiteDBClass.SQLNonQueryText(cn, cmd2);
-                    }
-                }
+                return GetDB(journalid, cn);
             }
         }
 
-        public static void UpdateSyncFlagBit(long journalid, SyncFlags bit, bool value)
-        {
-            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
-            {
-                JournalEntry je = Get(journalid, cn);
-
-                if (je != null)
-                {
-                    if (value)
-                        je.Synced |= (int)bit;
-                    else
-                        je.Synced &= ~(int)bit;
-
-                    using (DbCommand cmd = cn.CreateCommand("Update JournalEntries set Synced = @sync where ID=@journalid"))
-                    {
-                        cmd.AddParameterWithValue("@journalid", journalid);
-                        cmd.AddParameterWithValue("@sync", je.Synced);
-                        System.Diagnostics.Trace.WriteLine(string.Format("Update sync flag ID {0} with {1}", journalid, je.Synced));
-                        SQLiteDBClass.SQLNonQueryText(cn, cmd);
-                    }
-                }
-            }
-        }
-
-        public static void UpdateCommanderID(long journalid, int cmdrid)
-        {
-            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
-            {
-                using (DbCommand cmd = cn.CreateCommand("Update JournalEntries set CommanderID = @cmdrid where ID=@journalid"))
-                {
-                    cmd.AddParameterWithValue("@journalid", journalid);
-                    cmd.AddParameterWithValue("@cmdrid", cmdrid);
-                    System.Diagnostics.Trace.WriteLine(string.Format("Update cmdr id ID {0} with map colour", journalid));
-                    SQLiteDBClass.SQLNonQueryText(cn, cmd);
-                }
-            }
-        }
-
-        public static long AddEDDItemSet(int cmdrid, DateTime dt, long jidofitemset, List<MaterialCommodities> changelist)     // add item, return journal ID
-        {
-            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
-            {
-                JournalEDDItemSet jis;
-
-                if (jidofitemset > 0)                                       // 0 means currently not on an item..
-                    jis = (JournalEDDItemSet)Get(jidofitemset, cn);
-                else
-                {
-                    JObject jo = new JObject();
-                    jo["timestamp"] = dt;
-                    jo["event"] = JournalTypeEnum.EDDItemSet.ToString();
-                    jis = new JournalEDDItemSet(jo);
-                    jis.CommanderId = cmdrid;
-                }
-
-                foreach (MaterialCommodities mc in changelist)              // reset the list to these.. or add on if there are more
-                {
-                    if (mc.category.Equals(MaterialCommodities.CommodityCategory))
-                        jis.Commodities.Set(mc.fdname, mc.count, mc.price);
-                    else
-                        jis.Materials.Set(mc.category, mc.fdname, mc.count);
-                }
-
-                jis.UpdateState();
-
-                if (jidofitemset > 0)
-                    jis.Update(cn);
-                else
-                    jis.Add(cn);
-
-                return jis.Id;
-            }
-        }
-
-        static public JournalEntry Get(long journalid)
-        {
-            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
-            {
-                return Get(journalid, cn);
-            }
-        }
-
-        static public JournalEntry Get(long journalid, SQLiteConnectionUser cn, DbTransaction tn = null)
+        static public JournalEntryDB GetDB(long journalid, SQLiteConnectionUser cn, DbTransaction tn = null)
         {
             using (DbCommand cmd = cn.CreateCommand("select * from JournalEntries where ID=@journalid", tn))
             {
@@ -635,40 +636,12 @@ namespace EDDiscovery.EliteDangerous
                 {
                     while (reader.Read())
                     {
-                        return CreateJournalEntry(reader);
+                        return Create(reader);
                     }
                 }
             }
 
             return null;
-        }
-
-        static public List<JournalEntry> Get(string eventtype)            // any commander, find me an event of this type..
-        {
-            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
-            {
-                return Get(eventtype, cn);
-            }
-        }
-
-        static public List<JournalEntry> Get(string eventtype, SQLiteConnectionUser cn, DbTransaction tn = null)
-        {
-            using (DbCommand cmd = cn.CreateCommand("select * from JournalEntries where EventType=@ev", tn))
-            {
-                cmd.AddParameterWithValue("@ev", eventtype);
-
-                using (DbDataReader reader = cmd.ExecuteReader())
-                {
-                    List<JournalEntry> entries = new List<JournalEntry>();
-
-                    while (reader.Read())
-                    {
-                        entries.Add(CreateJournalEntry(reader));
-                    }
-
-                    return entries;
-                }
-            }
         }
 
         static public List<JournalEntry> GetAll(int commander = -999)
@@ -691,8 +664,8 @@ namespace EDDiscovery.EliteDangerous
 
                     foreach (DataRow dr in ds.Tables[0].Rows)
                     {
-                        JournalEntry sys = JournalEntry.CreateJournalEntry(dr);
-                        list.Add(sys);
+                        JObject jo = (JObject)JObject.Parse((string)dr["EventData"]);
+                        list.Add(JournalEntry.CreateJournalEntry(dr,jo));
                     }
 
                     return list;
@@ -717,7 +690,8 @@ namespace EDDiscovery.EliteDangerous
                     {
                         while (reader.Read())
                         {
-                            vsc.Add(JournalEntry.CreateJournalEntry(reader));
+                            JObject jo = (JObject)JObject.Parse((string)reader["EventData"]);
+                            vsc.Add(JournalEntry.CreateJournalEntry(reader, jo));
                         }
                     }
                 }
@@ -725,9 +699,28 @@ namespace EDDiscovery.EliteDangerous
             return vsc;
         }
 
+        public static List<JournalEntryDB> GetAllDBByTLU(long tluid)
+        {
+            List<JournalEntryDB> vsc = new List<JournalEntryDB>();
 
+            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
+            {
+                using (DbCommand cmd = cn.CreateCommand("SELECT * FROM JournalEntries WHERE TravelLogId = @source ORDER BY EventTime ASC"))
+                {
+                    cmd.AddParameterWithValue("@source", tluid);
+                    using (DbDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            vsc.Add(Create(reader));
+                        }
+                    }
+                }
+            }
+            return vsc;
+        }
 
-        public static List<JournalEntry> GetAllByTLU(long tluid)
+        public static List<JournalEntry> GetAllEntryByTLU(long tluid)
         {
             List<JournalEntry> vsc = new List<JournalEntry>();
 
@@ -740,7 +733,8 @@ namespace EDDiscovery.EliteDangerous
                     {
                         while (reader.Read())
                         {
-                            vsc.Add(JournalEntry.CreateJournalEntry(reader));
+                            JObject jo = (JObject)JObject.Parse((string)reader["EventData"]);
+                            vsc.Add(JournalEntry.CreateJournalEntry(reader, jo));
                         }
                     }
                 }
@@ -760,34 +754,10 @@ namespace EDDiscovery.EliteDangerous
                     {
                         while (reader.Read())
                         {
-                            JournalEntry ent = CreateJournalEntry(reader);
-                            if (filter(ent))
+                            JournalEntryDB ent = Create(reader);
+                            if (filter(ent.je))
                             {
-                                return ent;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        public static JournalEntry GetLast(DateTime before, Func<JournalEntry, bool> filter)
-        {
-            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
-            {
-                using (DbCommand cmd = cn.CreateCommand("SELECT * FROM JournalEntries WHERE EventTime < @time ORDER BY EventTime DESC"))
-                {
-                    cmd.AddParameterWithValue("@time", before);
-                    using (DbDataReader reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            JournalEntry ent = CreateJournalEntry(reader);
-                            if (filter(ent))
-                            {
-                                return ent;
+                                return ent.je;
                             }
                         }
                     }
@@ -801,6 +771,31 @@ namespace EDDiscovery.EliteDangerous
             where T : JournalEntry
         {
             return (T)GetLast(cmdrid, before, e => e is T && (filter == null || filter((T)e)));
+        }
+
+
+        public static JournalEntry GetLast(DateTime before, Func<JournalEntry, bool> filter)
+        {
+            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
+            {
+                using (DbCommand cmd = cn.CreateCommand("SELECT * FROM JournalEntries WHERE EventTime < @time ORDER BY EventTime DESC"))
+                {
+                    cmd.AddParameterWithValue("@time", before);
+                    using (DbDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            JournalEntryDB ent = Create(reader);
+                            if (filter(ent.je))
+                            {
+                                return ent.je;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         public static T GetLast<T>(DateTime before, Func<T, bool> filter = null)
@@ -822,7 +817,7 @@ namespace EDDiscovery.EliteDangerous
             obj.Remove("StarPosFromEDSM");
         }
 
-        public static bool AreSameEntry(JournalEntry ent1, JournalEntry ent2, JObject ent1jo = null, JObject ent2jo = null)
+        public static bool AreSameEntry(JournalEntryDB ent1, JournalEntryDB ent2, JObject ent1jo = null, JObject ent2jo = null)
         {
             if (ent1.jEventData == null || ent2.jEventData == null)
                 return false;
@@ -842,9 +837,9 @@ namespace EDDiscovery.EliteDangerous
             return JToken.DeepEquals(ent1jo, ent2jo);
         }
 
-        public static List<JournalEntry> FindEntry(JournalEntry ent)
+        public static List<JournalEntryDB> FindEntry(JournalEntryDB ent)
         {
-            List<JournalEntry> entries = new List<JournalEntry>();
+            List<JournalEntryDB> entries = new List<JournalEntryDB>();
             JObject entjo = (JObject)ent.jEventData.DeepClone();
             RemoveGeneratedKeys(entjo, false);
 
@@ -852,15 +847,15 @@ namespace EDDiscovery.EliteDangerous
             {
                 using (DbCommand cmd = cn.CreateCommand("SELECT * FROM JournalEntries WHERE CommanderId = @cmdrid AND EventTime = @time AND TravelLogId = @tluid AND EventTypeId = @evttype ORDER BY Id ASC"))
                 {
-                    cmd.AddParameterWithValue("@cmdrid", ent.CommanderId);
-                    cmd.AddParameterWithValue("@time", ent.EventTimeUTC);
-                    cmd.AddParameterWithValue("@tluid", ent.TLUId);
-                    cmd.AddParameterWithValue("@evttype", ent.EventTypeID);
+                    cmd.AddParameterWithValue("@cmdrid", ent.je.CommanderId);
+                    cmd.AddParameterWithValue("@time", ent.je.EventTimeUTC);
+                    cmd.AddParameterWithValue("@tluid", ent.je.TLUId);
+                    cmd.AddParameterWithValue("@evttype", ent.je.EventTypeID);
                     using (DbDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            JournalEntry jent = CreateJournalEntry(reader);
+                            JournalEntryDB jent = Create(reader);
                             if (!AreSameEntry(ent, jent, entjo))
                             {
                                 entries.Add(jent);
@@ -876,7 +871,7 @@ namespace EDDiscovery.EliteDangerous
         public static int RemoveDuplicateFSDEntries(int currentcmdrid)
         {
             // list of systems in journal, sorted by time
-            List<JournalLocOrJump> vsSystemsEnts = JournalEntry.GetAll(currentcmdrid).OfType<JournalLocOrJump>().OrderBy(j => j.EventTimeUTC).ToList();
+            List<JournalLocOrJump> vsSystemsEnts = GetAll(currentcmdrid).OfType<JournalLocOrJump>().OrderBy(j => j.EventTimeUTC).ToList();
 
             int count = 0;
             using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
@@ -920,70 +915,6 @@ namespace EDDiscovery.EliteDangerous
             }
         }
 
-        static public Type TypeOfJournalEntry(JournalTypeEnum type)
-        {
-            if (JournalEntryTypes.ContainsKey(type))
-            {
-                return JournalEntryTypes[type];
-            }
-            else
-            {
-                return TypeOfJournalEntry(type.ToString());
-            }
-        }
-
-        #endregion
-
-        #region Factory creation
-
-        static public Type TypeOfJournalEntry(string text)
-        {
-            //foreach (JournalTypeEnum jte in Enum.GetValues(typeof(JournalTypeEnum))) // check code only to make sure names match
-            //{
-            //Type p = Type.GetType("EDDiscovery.EliteDangerous.JournalEvents.Journal" + jte.ToString());
-            //Debug.Assert(p != null);
-            //}
-
-            Type t = Type.GetType("EDDiscovery.EliteDangerous.JournalEvents.Journal" + text, false, true); // no exception, ignore case here
-            return t;
-        }
-
-        static public JournalEntry CreateJournalEntry(string text)
-        {
-            JObject jo = (JObject)JObject.Parse(text);
-
-            string Eventstr = JSONHelper.GetStringNull(jo["event"]);
-
-            if (Eventstr == null)  // Should normaly not happend unless corrupt string.
-                return null;
-
-            Type jtype = TypeOfJournalEntry(Eventstr);
-
-            if (jtype == null)
-            {
-                System.Diagnostics.Trace.WriteLine("Unknown event: " + Eventstr);
-                return new JournalUnknown(jo, Eventstr);
-            }
-            else
-                return (JournalEntry)Activator.CreateInstance(jtype, jo);
-        }
-
-        #endregion
-        
-        #region Misc
-
-        static public JournalTypeEnum JournalString2Type(string str)
-        {
-            foreach (JournalTypeEnum mat in Enum.GetValues(typeof(JournalTypeEnum)))
-            {
-                if (str.ToLower().Equals(mat.ToString().ToLower()))
-                    return mat;
-            }
-
-            return JournalTypeEnum.Unknown;
-        }
-
-
         static public bool ResetCommanderID(int from, int to)
         {
             using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
@@ -1001,41 +932,5 @@ namespace EDDiscovery.EliteDangerous
             }
             return true;
         }
-
-        static public List<string> GetListOfEventsWithOptMethod(bool towords, string method = null, string method2 = null )
-        {
-            List<string> ret = new List<string>();
-
-            foreach (JournalTypeEnum jte in Enum.GetValues(typeof(JournalTypeEnum)))
-            {
-                string n = jte.ToString();
-
-                if (method == null)
-                {
-                    ret.Add((towords) ? n.SplitCapsWord() : n);
-                }
-                else
-                {
-                    Type jtype = TypeOfJournalEntry(jte);
-
-                    if (jtype != null)      // may be null, Unknown for instance
-                    {
-                        System.Reflection.MethodInfo m = jtype.GetMethod(method);
-
-                        if (m == null && method2 != null)
-                            m = jtype.GetMethod(method2);
-
-                        if (m != null)
-                            ret.Add((towords) ? n.SplitCapsWord() : n);
-                    }
-                }
-            }
-
-            return ret;
-        }
-
-        #endregion
-
     }
 }
-     

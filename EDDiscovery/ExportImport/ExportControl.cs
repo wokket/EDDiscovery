@@ -184,7 +184,7 @@ namespace EDDiscovery
                 exportfilename = dlg.FileName;
             }
 
-            scans = JournalEntry.GetByEventType(JournalTypeEnum.FSDJump, EDDiscoveryForm.EDDConfig.CurrentCmdrID, new DateTime (2014, 1,1), DateTime.UtcNow) ;
+            scans = JournalEntryDB.GetByEventType(JournalTypeEnum.FSDJump, EDDiscoveryForm.EDDConfig.CurrentCmdrID, new DateTime (2014, 1,1), DateTime.UtcNow) ;
 
             var tscans = scans.ConvertAll<JournalFSDJump>(x=>(JournalFSDJump)x);
             try

@@ -95,16 +95,16 @@ namespace EDDiscovery.EliteDangerous
                     EDJournalReader reader = readersToUpdate[i];
                     updateProgress(i * 100 / readersToUpdate.Count, reader.TravelLogUnit.Name);
 
-                    List<JournalEntry> entries = reader.ReadJournalLog(true).ToList();      // this may create new commanders, and may write to the TLU db
-                    ILookup<DateTime, JournalEntry> existing = JournalEntry.GetAllByTLU(reader.TravelLogUnit.id).ToLookup(e => e.EventTimeUTC);
+                    List<JournalEntryDB> entries = reader.ReadJournalLog(true).ToList();      // this may create new commanders, and may write to the TLU db
+                    ILookup<DateTime, JournalEntryDB> existing = JournalEntryDB.GetAllDBByTLU(reader.TravelLogUnit.id).ToLookup(e => e.je.EventTimeUTC);
 
                     using (DbTransaction tn = cn.BeginTransaction())
                     {
-                        foreach (JournalEntry je in entries)
+                        foreach (JournalEntryDB je in entries)
                         {
-                            if (!existing[je.EventTimeUTC].Any(e => JournalEntry.AreSameEntry(je, e)))
+                            if (!existing[je.je.EventTimeUTC].Any(e => JournalEntryDB.AreSameEntry(je, e)))
                             {
-                                System.Diagnostics.Trace.WriteLine(string.Format("Write Journal to db {0} {1}", je.EventTimeUTC, je.EventTypeStr));
+        //                        System.Diagnostics.Trace.WriteLine(string.Format("Write Journal to db {0} {1}", je.EventTimeUTC, je.EventTypeStr));
                                 je.Add(cn, tn);
                             }
                         }
@@ -219,7 +219,7 @@ namespace EDDiscovery.EliteDangerous
             }
         }
 
-        private void ScanReader(EDJournalReader nfi, List<JournalEntry> entries)
+        private void ScanReader(EDJournalReader nfi, List<JournalEntryDB> entries)
         {
             int netlogpos = 0;
 
@@ -233,7 +233,7 @@ namespace EDDiscovery.EliteDangerous
 
                 netlogpos = nfi.TravelLogUnit.Size;
 
-                List<JournalEntry> ents = nfi.ReadJournalLog().ToList();
+                List<JournalEntryDB> ents = nfi.ReadJournalLog().ToList();
 
                 if (ents.Count > 0)
                 {
@@ -241,9 +241,9 @@ namespace EDDiscovery.EliteDangerous
                     {
                         using (DbTransaction txn = cn.BeginTransaction())
                         {
-                            ents = ents.Where(je => JournalEntry.FindEntry(je).Count == 0).ToList();
+                            ents = ents.Where(je => JournalEntryDB.FindEntry(je).Count == 0).ToList();
 
-                            foreach (JournalEntry je in ents)
+                            foreach (JournalEntryDB je in ents)
                             {
                                 entries.Add(je);
                                 je.Add(cn, txn);
@@ -269,9 +269,9 @@ namespace EDDiscovery.EliteDangerous
             }
         }
 
-        public List<JournalEntry> ScanForNewEntries()
+        public List<JournalEntryDB> ScanForNewEntries()
         {
-            var entries = new List<JournalEntry>();
+            var entries = new List<JournalEntryDB>();
             EDJournalReader nfi = null;
 
             try
@@ -342,7 +342,7 @@ namespace EDDiscovery.EliteDangerous
             {
                 System.Diagnostics.Trace.WriteLine("Net tick exception : " + ex.Message);
                 System.Diagnostics.Trace.WriteLine(ex.StackTrace);
-                return new List<JournalEntry>();
+                return new List<JournalEntryDB>();
             }
         }
 
@@ -498,7 +498,7 @@ namespace EDDiscovery.EliteDangerous
 
             while (!stopRequested.WaitOne(2000))
             {
-                List<JournalEntry> jl = ScanTickWorker(() => stopRequested.WaitOne(0));
+                List<JournalEntryDB> jl = ScanTickWorker(() => stopRequested.WaitOne(0));
 
                 if (jl != null && jl.Count != 0 && !stopRequested.WaitOne(0))
                 {
@@ -507,9 +507,9 @@ namespace EDDiscovery.EliteDangerous
             }
         }
 
-        private List<JournalEntry> ScanTickWorker(Func<bool> stopRequested)
+        private List<JournalEntryDB> ScanTickWorker(Func<bool> stopRequested)
         {
-            var entries = new List<JournalEntry>();
+            var entries = new List<JournalEntryDB>();
 
             foreach (MonitorWatcher mw in watchers)
             {
@@ -524,15 +524,15 @@ namespace EDDiscovery.EliteDangerous
             return entries;
         }
 
-        private void ScanTickDone(List<JournalEntry> entries)
+        private void ScanTickDone(List<JournalEntryDB> entries)
         {
             if (entries != null)
             {
                 foreach (var ent in entries)                    // pass them to the handler
                 {
-                    System.Diagnostics.Trace.WriteLine(string.Format("New entry {0} {1}", ent.EventTimeUTC, ent.EventTypeStr));
+                    System.Diagnostics.Trace.WriteLine(string.Format("New entry {0} {1}", ent.je.EventTimeUTC, ent.je.EventTypeStr));
                     if (OnNewJournalEntry != null)
-                        OnNewJournalEntry(ent);
+                        OnNewJournalEntry(ent.je);
                 }
             }
         }

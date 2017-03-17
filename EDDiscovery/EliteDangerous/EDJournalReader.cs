@@ -35,7 +35,7 @@ namespace EDDiscovery.EliteDangerous
 
         public static bool disable_beta_commander_check = false;        // strictly for debugging purposes
 
-        private Queue<JournalEntry> StartEntries = new Queue<JournalEntry>();
+        private Queue<JournalEntryDB> StartEntries = new Queue<JournalEntryDB>();
 
         public EDJournalReader(string filename) : base(filename)
         {
@@ -48,7 +48,7 @@ namespace EDDiscovery.EliteDangerous
         // Journal ID
         public int JournalId { get { return (int)TravelLogUnit.id; } }
 
-        protected JournalEntry ProcessLine(string line, bool resetOnError)
+        protected JournalEntryDB ProcessLine(string line, bool resetOnError)
         {
             int cmdrid = -2;        //-1 is hidden, -2 is never shown
 
@@ -61,11 +61,11 @@ namespace EDDiscovery.EliteDangerous
             if (line.Length == 0)
                 return null;
 
-            JournalEntry je = null;
+            JournalEntryDB je = null;
 
             try
             {
-                je = JournalEntry.CreateJournalEntry(line);
+                je = JournalEntryDB.Create(line);
             }
             catch
             {
@@ -81,9 +81,9 @@ namespace EDDiscovery.EliteDangerous
                 }
             }
 
-            if (je.EventTypeID == JournalTypeEnum.Fileheader)
+            if (je.je.EventTypeID == JournalTypeEnum.Fileheader)
             {
-                JournalEvents.JournalFileheader header = (JournalEvents.JournalFileheader)je;
+                JournalEvents.JournalFileheader header = (JournalEvents.JournalFileheader)je.je;
 
                 if (header.Beta && !disable_beta_commander_check)
                 {
@@ -92,7 +92,7 @@ namespace EDDiscovery.EliteDangerous
 
                 if (header.Part > 1)
                 {
-                    JournalEvents.JournalContinued contd = JournalEntry.GetLast<JournalEvents.JournalContinued>(je.EventTimeUTC.AddSeconds(1), e => e.Part == header.Part);
+                    JournalEvents.JournalContinued contd = JournalEntryDB.GetLast<JournalEvents.JournalContinued>(je.je.EventTimeUTC.AddSeconds(1), e => e.Part == header.Part);
 
                     // Carry commander over from previous log if it ends with a Continued event.
                     if (contd != null && Math.Abs(header.EventTimeUTC.Subtract(contd.EventTimeUTC).TotalSeconds) < 5 && contd.CommanderId >= 0)
@@ -101,9 +101,9 @@ namespace EDDiscovery.EliteDangerous
                     }
                 }
             }
-            else if (je.EventTypeID == JournalTypeEnum.LoadGame)
+            else if (je.je.EventTypeID == JournalTypeEnum.LoadGame)
             {
-                string newname = (je as JournalEvents.JournalLoadGame).LoadGameCommander;
+                string newname = (je.je as JournalEvents.JournalLoadGame).LoadGameCommander;
 
                 if ((TravelLogUnit.type & 0x8000) == 0x8000)
                 {
@@ -135,18 +135,18 @@ namespace EDDiscovery.EliteDangerous
                 }
             }
 
-            je.TLUId = (int)TravelLogUnit.id;
-            je.CommanderId = cmdrid;
+            je.je.TLUId = (int)TravelLogUnit.id;
+            je.je.CommanderId = cmdrid;
 
             return je;
         }
 
-        public bool ReadJournalLog(out JournalEntry jent, bool resetOnError = false)
+        public bool ReadJournalLog(out JournalEntryDB jent, bool resetOnError = false)
         {
             if (StartEntries.Count != 0 && this.TravelLogUnit.CommanderId != null && this.TravelLogUnit.CommanderId >= 0)
             {
                 jent = StartEntries.Dequeue();
-                jent.CommanderId = (int)TravelLogUnit.CommanderId;
+                jent.je.CommanderId = (int)TravelLogUnit.CommanderId;
                 return true;
             }
 
@@ -155,7 +155,7 @@ namespace EDDiscovery.EliteDangerous
                 if (jent == null)
                     continue;
 
-                if ((this.TravelLogUnit.CommanderId == null || this.TravelLogUnit.CommanderId < 0) && jent.EventTypeID != JournalTypeEnum.LoadGame)
+                if ((this.TravelLogUnit.CommanderId == null || this.TravelLogUnit.CommanderId < 0) && jent.je.EventTypeID != JournalTypeEnum.LoadGame)
                 {
                     StartEntries.Enqueue(jent);
                     continue;
@@ -170,9 +170,9 @@ namespace EDDiscovery.EliteDangerous
             return false;
         }
 
-        public IEnumerable<JournalEntry> ReadJournalLog(bool continueOnError = false)
+        public IEnumerable<JournalEntryDB> ReadJournalLog(bool continueOnError = false)
         {
-            JournalEntry entry;
+            JournalEntryDB entry;
             bool resetOnError = false;
             while (ReadJournalLog(out entry, resetOnError: resetOnError))
             {

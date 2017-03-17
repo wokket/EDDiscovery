@@ -751,7 +751,7 @@ namespace EDDiscovery.UserControls
 
         private void selectCorrectSystemToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            List<JournalEntry> jents = JournalEntry.GetAll(EDDiscovery2.EDDConfig.Instance.CurrentCmdrID).OrderBy(j => j.EventTimeUTC).ThenBy(j => j.Id).ToList();
+            List<JournalEntry> jents = JournalEntryDB.GetAll(EDDiscovery2.EDDConfig.Instance.CurrentCmdrID).OrderBy(j => j.EventTimeUTC).ThenBy(j => j.Id).ToList();
             int selindex = jents.FindIndex(j => j.Id == rightclicksystem.Journalid);
             int firstrow = selindex;
             int lastrow = selindex;
@@ -811,7 +811,7 @@ namespace EDDiscovery.UserControls
                     foreach (var jent in jents)
                     {
                         jent.EdsmID = (int)form.AssignedEdsmId;
-                        jent.Update();
+                        //TBDjent.Update();
                     }
 
                     discoveryform.RefreshHistoryAsync();
@@ -832,7 +832,7 @@ namespace EDDiscovery.UserControls
         {
             if (EDDiscovery.Forms.MessageBoxTheme.Show("Confirm you wish to remove this entry" + Environment.NewLine + "It may reappear if the logs are rescanned", "WARNING", MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
-                JournalEntry.Delete(rightclicksystem.Journalid);
+                JournalEntryDB.Delete(rightclicksystem.Journalid);
                 discoveryform.RefreshHistoryAsync();
             }
         }

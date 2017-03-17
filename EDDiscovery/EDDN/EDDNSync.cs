@@ -143,33 +143,31 @@ namespace EDDiscovery2.EDSM
 
             JournalEntry je = he.journalEntry;
 
-            if (je == null)
+            if (je != null)
             {
-                je = JournalEntry.Get(he.Journalid);
-            }
+                JObject msg = null;
 
-            JObject msg = null;
-
-            if (je.EventTypeID == JournalTypeEnum.FSDJump)
-            {
-                msg = eddn.CreateEDDNMessage(je as JournalFSDJump);
-
-            }
-            else if (je.EventTypeID == JournalTypeEnum.Docked)
-            {
-                msg = eddn.CreateEDDNMessage(je as JournalDocked, he.System.x, he.System.y, he.System.z);
-            }
-            else if (je.EventTypeID == JournalTypeEnum.Scan)
-            {
-                msg = eddn.CreateEDDNMessage(je as JournalScan, he.System.name, he.System.x, he.System.y, he.System.z);
-            }
-
-            if (msg != null)
-            {
-                if (eddn.PostMessage(msg))
+                if (je.EventTypeID == JournalTypeEnum.FSDJump)
                 {
-                    he.SetEddnSync();
-                    return true;
+                    msg = eddn.CreateEDDNMessage(je as JournalFSDJump);
+
+                }
+                else if (je.EventTypeID == JournalTypeEnum.Docked)
+                {
+                    msg = eddn.CreateEDDNMessage(je as JournalDocked, he.System.x, he.System.y, he.System.z);
+                }
+                else if (je.EventTypeID == JournalTypeEnum.Scan)
+                {
+                    msg = eddn.CreateEDDNMessage(je as JournalScan, he.System.name, he.System.x, he.System.y, he.System.z);
+                }
+
+                if (msg != null)
+                {
+                    if (eddn.PostMessage(msg))
+                    {
+                        he.SetEddnSync();
+                        return true;
+                    }
                 }
             }
 

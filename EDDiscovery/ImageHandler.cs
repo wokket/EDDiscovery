@@ -568,7 +568,7 @@ namespace EDDiscovery2.ImageHandler
                 }
                 else if (cmdrid >= 0)
                 {
-                    LastJournalLoc = JournalEntry.GetLast<JournalLocOrJump>(cmdrid, DateTime.UtcNow);
+                    LastJournalLoc = JournalEntryDB.GetLast<JournalLocOrJump>(cmdrid, DateTime.UtcNow);
                     if (LastJournalLoc != null)
                     {
                         sysname = LastJournalLoc.StarSystem;
@@ -701,7 +701,7 @@ namespace EDDiscovery2.ImageHandler
                 if (JournalScreenShot != null)
                 {
                     JournalScreenShot.SetConvertedFilename(InputFilename, OutputFilename, FinalSize.X, FinalSize.Y);
-                    JournalScreenShot.Update();
+                    //TBD JournalScreenShot.Update();
                 }
 
                 Controller.LogLine("Converted " + Path.GetFileName(InputFilename) + " to " + Path.GetFileName(OutputFilename));
@@ -765,12 +765,12 @@ namespace EDDiscovery2.ImageHandler
 
                 if (ss != null)
                 {
-                    JObject jo = ss.jEventData;
-                    if (jo["EDDOutputFile"] != null && File.Exists(JSONHelper.GetStringDef(jo["EDDOutputFile"])))
-                    {
-                        store_name = JSONHelper.GetStringDef(jo["EDDOutputFile"]);
-                        finalsize = new Point(JSONHelper.GetInt(jo["EDDOutputWidth"]), JSONHelper.GetInt(jo["EDDOutputHeight"]));
-                    }
+//  TBD                  JObject jo = ss.jEventData;
+  //                  if (jo["EDDOutputFile"] != null && File.Exists(JSONHelper.GetStringDef(jo["EDDOutputFile"])))
+    //                {
+      //                  store_name = JSONHelper.GetStringDef(jo["EDDOutputFile"]);
+        //                finalsize = new Point(JSONHelper.GetInt(jo["EDDOutputWidth"]), JSONHelper.GetInt(jo["EDDOutputHeight"]));
+          //          }
                 }
             }
             catch

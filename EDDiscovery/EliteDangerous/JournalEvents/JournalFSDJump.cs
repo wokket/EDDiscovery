@@ -67,9 +67,7 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
             if (!evt["Powers"].Empty())
                 Powers = evt.Value<JArray>("Powers").Values<string>().ToArray();
 
-            JToken jm = jEventData["EDDMapColor"];
-            if (jm.Empty())
-                MapColor = EDDiscovery2.EDDConfig.Instance.DefaultMapColour;      // new entries get this default map colour if its not already there
+            mapcolor = evt["EDDMapColor"].Int(EDDiscovery2.EDDConfig.Instance.DefaultMapColour);
         }
 
         public string Body { get; set; }
@@ -88,6 +86,8 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
         public string Security_Localised { get; set; }
         public string PowerplayState { get; set; }
         public string[] Powers { get; set; }
+
+        private int mapcolor;
 
         public override void FillInformation(out string summary, out string info, out string detailed)  //V
         {
@@ -109,27 +109,17 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
             detailed = "";
         }
 
-        public bool RealJournalEvent  // True if real ED 2.2+ journal event and not pre 2.2 imported.
-        {
-            get
-            {
-                if (jEventData["FuelUsed"].Empty())  // Old pre ED 2.2 messages has no Fuel used fields
-                    return false;
-                else
-                    return true;
-            }
-        }
-
 
         public int MapColor
         {
             get
             {
-                return jEventData["EDDMapColor"].Int(Color.Red.ToArgb());
+                return mapcolor;
             }
             set
             {
-                jEventData["EDDMapColor"] = value;
+                mapcolor = value;
+                //TBD write back?
             }
         }
 

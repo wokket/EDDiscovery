@@ -31,8 +31,8 @@ namespace EDDiscovery
         {
             System.IO.StreamReader filejr = new System.IO.StreamReader(file);
             string line;
-            string system = "";
-            StarScan ss = new StarScan();
+            //string system = "";
+            //StarScan ss = new StarScan();
 
             Dictionary<string, string> items = new Dictionary<string, string>();
 
@@ -50,24 +50,24 @@ namespace EDDiscovery
                     //string s = jpp.PrettyPrintStr(line, 80);
                     //System.Diagnostics.Trace.WriteLine(s);
 
-                    EliteDangerous.JournalEntry je = EliteDangerous.JournalEntry.CreateJournalEntry(line);
+                    //EliteDangerous.JournalEntry je = EliteDangerous.JournalEntry.CreateJournalEntry(line);
                     //System.Diagnostics.Trace.WriteLine(je.EventTypeStr);
 
-                    if (je.EventTypeID == JournalTypeEnum.Location)
-                    {
-                        EDDiscovery.EliteDangerous.JournalEvents.JournalLocOrJump jl = je as EDDiscovery.EliteDangerous.JournalEvents.JournalLocOrJump;
-                        system = jl.StarSystem;
-                    }
-                    else if (je.EventTypeID == JournalTypeEnum.FSDJump)
-                    {
-                        EDDiscovery.EliteDangerous.JournalEvents.JournalFSDJump jfsd = je as EDDiscovery.EliteDangerous.JournalEvents.JournalFSDJump;
-                        system = jfsd.StarSystem;
+                    //if (je.EventTypeID == JournalTypeEnum.Location)
+                    //{
+                    //    EDDiscovery.EliteDangerous.JournalEvents.JournalLocOrJump jl = je as EDDiscovery.EliteDangerous.JournalEvents.JournalLocOrJump;
+                    //    system = jl.StarSystem;
+                    //}
+                    //else if (je.EventTypeID == JournalTypeEnum.FSDJump)
+                    //{
+                    //    EDDiscovery.EliteDangerous.JournalEvents.JournalFSDJump jfsd = je as EDDiscovery.EliteDangerous.JournalEvents.JournalFSDJump;
+                    //    system = jfsd.StarSystem;
 
-                    }
-                    else if (je.EventTypeID == JournalTypeEnum.Scan)
-                    {
-                        ss.Process(je as EliteDangerous.JournalEvents.JournalScan, new SystemClass(system));
-                    }
+                    //}
+                    //else if (je.EventTypeID == JournalTypeEnum.Scan)
+                    //{
+                    //    ss.Process(je as EliteDangerous.JournalEvents.JournalScan, new SystemClass(system));
+                    //}
                 }
 
             }

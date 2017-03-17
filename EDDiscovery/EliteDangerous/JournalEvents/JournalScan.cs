@@ -124,6 +124,8 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
             }
         }
 
+        public bool IsEDSMBody { get; set; }
+
         // Classes
 
         public class StarPlanetRing
@@ -133,14 +135,6 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
             public double MassMT;
             public double InnerRad;
             public double OuterRad;
-        }
-
-        public bool IsEDSMBody
-        {
-            get
-            {
-                return jEventData["EDDFromEDSMBodie"].Bool(false);
-            }
         }
 
         private const double solarRadius_m = 695700000;

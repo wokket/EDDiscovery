@@ -89,20 +89,20 @@ namespace EDDiscovery.EDDN
             msg["header"] = Header();
             msg["$schemaRef"] = GetEDDNSchemaRef();
 
-            JObject message = (JObject) JObject.Parse(journal.EventDataString);
+         //TBD   JObject message = (JObject) JObject.Parse(journal.EventDataString);
 
-            if (JSONHelper.IsNullOrEmptyT(message["FuelUsed"]))  // Old ED 2.1 messages has no Fuel used fields
-                return null;
+//TBD            if (JSONHelper.IsNullOrEmptyT(message["FuelUsed"]))  // Old ED 2.1 messages has no Fuel used fields
+     //TBD           return null;
 
 
-            message = RemoveCommonKeys(message);
-            message.Remove("BoostUsed");
-            message.Remove("JumpDist");
-            message.Remove("FuelUsed");
-            message.Remove("FuelLevel");
-            message.Remove("StarPosFromEDSM");
+            //message = RemoveCommonKeys(message);
+            //message.Remove("BoostUsed");
+            //message.Remove("JumpDist");
+            //message.Remove("FuelUsed");
+            //message.Remove("FuelLevel");
+            //message.Remove("StarPosFromEDSM");
 
-            msg["message"] = message;
+            //msg["message"] = message;
             return msg;
         }
 
@@ -110,17 +110,17 @@ namespace EDDiscovery.EDDN
         {
             JObject msg = new JObject();
 
-            msg["header"] = Header();
-            msg["$schemaRef"] = GetEDDNSchemaRef();
+            //msg["header"] = Header();
+            //msg["$schemaRef"] = GetEDDNSchemaRef();
 
-            JObject message = (JObject)JObject.Parse(journal.EventDataString);
+            //JObject message = (JObject)JObject.Parse(journal.EventDataString);
 
-            message = RemoveCommonKeys(message);
-            message.Remove("CockpitBreach");
+            //message = RemoveCommonKeys(message);
+            //message.Remove("CockpitBreach");
 
-            message["StarPos"] = new JArray(new float[] { (float)x, (float)y, (float)z });
+            //message["StarPos"] = new JArray(new float[] { (float)x, (float)y, (float)z });
 
-            msg["message"] = message;
+            //msg["message"] = message;
             return msg;
         }
 
@@ -128,24 +128,24 @@ namespace EDDiscovery.EDDN
         {
             JObject msg = new JObject();
 
-            msg["header"] = Header();
-            msg["$schemaRef"] = GetEDDNSchemaRef();
+            //msg["header"] = Header();
+            //msg["$schemaRef"] = GetEDDNSchemaRef();
 
-            JObject message = (JObject)JObject.Parse(journal.EventDataString);
+            //JObject message = (JObject)JObject.Parse(journal.EventDataString);
 
-            message["StarSystem"] = starSystem;
-            message["StarPos"] = new JArray(new float[] { (float)x, (float)y, (float)z });
+            //message["StarSystem"] = starSystem;
+            //message["StarPos"] = new JArray(new float[] { (float)x, (float)y, (float)z });
 
-            string bodydesig = journal.BodyDesignation ?? journal.BodyName;
+            //string bodydesig = journal.BodyDesignation ?? journal.BodyName;
 
-            if (!bodydesig.StartsWith(starSystem))  // For now test if its a different name ( a few exception for like sol system with named planets)  To catch a rare out of sync bug in historylist.
-            {
-                return null;
-            }
+            //if (!bodydesig.StartsWith(starSystem))  // For now test if its a different name ( a few exception for like sol system with named planets)  To catch a rare out of sync bug in historylist.
+            //{
+            //    return null;
+            //}
 
 
-            message = RemoveCommonKeys(message);
-            msg["message"] = message;
+            //message = RemoveCommonKeys(message);
+            //msg["message"] = message;
             return msg;
         }
 

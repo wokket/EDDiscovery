@@ -61,7 +61,7 @@ namespace EDDiscovery
             }
             else
             {
-                systems = JournalEntry.GetAllByTLU(tlu.id).OfType<JournalLocOrJump>().ToList();
+                systems = JournalEntryDB.GetAllEntryByTLU(tlu.id).OfType<JournalLocOrJump>().ToList();
             }
         }
 
@@ -433,7 +433,7 @@ namespace EDDiscovery
                     {
                         if (systems.Count == 0)
                         {
-                            last = JournalEntry.GetLast<JournalLocOrJump>(cmdrid, je.EventTimeUTC);
+                            last = JournalEntryDB.GetLast<JournalLocOrJump>(cmdrid, je.EventTimeUTC);
                         }
                         else
                         {

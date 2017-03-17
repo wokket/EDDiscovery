@@ -60,7 +60,7 @@ namespace EDDiscovery.Export
 
                 scans = new List<JournalScan>();
 
-                var entries = JournalEntry.GetByEventType(JournalTypeEnum.Scan, EDDiscoveryForm.EDDConfig.CurrentCmdrID, _discoveryForm.history.GetMinDate, _discoveryForm.history.GetMaxDate);
+                var entries = JournalEntryDB.GetByEventType(JournalTypeEnum.Scan, EDDiscoveryForm.EDDConfig.CurrentCmdrID, _discoveryForm.history.GetMinDate, _discoveryForm.history.GetMaxDate);
                 scans = entries.ConvertAll<JournalScan>(x => (JournalScan)x);
             }
             else

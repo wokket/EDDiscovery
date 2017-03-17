@@ -72,7 +72,7 @@ namespace EDDiscovery.UserControls
                 if (he.EntryType == EliteDangerous.JournalTypeEnum.Screenshot)
                 {
                     JournalScreenshot ss = (JournalScreenshot)he.journalEntry;
-
+#if false
                     JObject jo = ss.jEventData;
                     if (jo["EDDOutputFile"] != null && File.Exists(JSONHelper.GetStringDef(jo["EDDOutputFile"])))
                     {
@@ -95,6 +95,7 @@ namespace EDDiscovery.UserControls
                             ScreenShot(filename, new Point(ss.Width, ss.Height));
                         }
                     }
+#endif
                 }
             }
         }

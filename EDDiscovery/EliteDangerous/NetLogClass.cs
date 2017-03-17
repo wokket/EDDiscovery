@@ -76,10 +76,10 @@ namespace EDDiscovery
             List<TravelLogUnit> tlus = TravelLogUnit.GetAll();
             Dictionary<string, TravelLogUnit> netlogtravelogUnits = tlus.Where(t => t.type == 1).GroupBy(t => t.Name).Select(g => g.First()).ToDictionary(t => t.Name);
             Dictionary<long, string> travellogunitid2name = netlogtravelogUnits.Values.ToDictionary(t => t.id, t => t.Name);
-            Dictionary<string, List<JournalLocOrJump>> vsc_lookup = JournalEntry.GetAll().OfType<JournalLocOrJump>().GroupBy(v => v.TLUId).Where(g => travellogunitid2name.ContainsKey(g.Key)).ToDictionary(g => travellogunitid2name[g.Key], g => g.ToList());
+            Dictionary<string, List<JournalLocOrJump>> vsc_lookup = JournalEntryDB.GetAll().OfType<JournalLocOrJump>().GroupBy(v => v.TLUId).Where(g => travellogunitid2name.ContainsKey(g.Key)).ToDictionary(g => travellogunitid2name[g.Key], g => g.ToList());
 
             // list of systems in journal, sorted by time
-            List<JournalLocOrJump> vsSystemsEnts = JournalEntry.GetAll(currentcmdrid).OfType<JournalLocOrJump>().OrderBy(j => j.EventTimeUTC).ToList();
+            List<JournalLocOrJump> vsSystemsEnts = JournalEntryDB.GetAll(currentcmdrid).OfType<JournalLocOrJump>().OrderBy(j => j.EventTimeUTC).ToList();
 
             // order by file write time so we end up on the last one written
             FileInfo[] allFiles = Directory.EnumerateFiles(datapath, "netLog.*.log", SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.LastWriteTime).ToArray();
@@ -130,6 +130,7 @@ namespace EDDiscovery
                         {
                             jo["EDDMapColor"] = defaultMapColour;
 
+                            //JournalEntryDB
                             JournalLocOrJump je = new JournalFSDJump(jo)
                             {
                                 TLUId = (int)reader.TravelLogUnit.id,
@@ -151,8 +152,8 @@ namespace EDDiscovery
 
                             if (!(previssame || nextissame))
                             {
-                                je.Add(cn, tn);
-                                System.Diagnostics.Debug.WriteLine("Add {0} {1}", je.EventTimeUTC, je.EventDataString);
+//TBD                                je.Add(cn, tn);
+//                                System.Diagnostics.Debug.WriteLine("Add {0} {1}", je.EventTimeUTC, je.EventDataString);
                             }
                         }
 

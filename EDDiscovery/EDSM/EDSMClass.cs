@@ -671,6 +671,7 @@ namespace EDDiscovery2.EDSM
                         {
                             EDSMClass.ConvertFromEDSMBodies(bodie);
                             JournalScan js = new JournalScan(bodie);
+                            js.IsEDSMBody = true;
                             js.EdsmID = edsmid;
 
                             bodies.Add(js);
@@ -703,7 +704,6 @@ namespace EDDiscovery2.EDSM
         public static JObject ConvertFromEDSMBodies(JObject jo)
         {
             jo["timestamp"] = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-            jo["EDDFromEDSMBodie"] = true;
 
             JSONHelper.Rename(jo["name"], "BodyName");
             if (jo["type"].Value<string>().Equals("Star"))

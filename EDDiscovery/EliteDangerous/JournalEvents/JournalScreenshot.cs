@@ -48,10 +48,10 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
 
         public void SetConvertedFilename(string input_filename, string output_filename, int width, int height)
         {
-            this.jEventData["EDDInputFile"] = input_filename;
-            this.jEventData["EDDOutputFile"] = output_filename;
-            this.jEventData["EDDOutputWidth"] = width;
-            this.jEventData["EDDOutputHeight"] = height;
+            // TBD this.jEventData["EDDInputFile"] = input_filename;
+            //this.jEventData["EDDOutputFile"] = output_filename;
+            //this.jEventData["EDDOutputWidth"] = width;
+            //this.jEventData["EDDOutputHeight"] = height;
         }
 
         public static JournalScreenshot GetScreenshot(string filename, int width, int height, DateTime timestamp, string sysname, int cmdrid)
@@ -61,7 +61,7 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
 
             if (cmdrid >= 0)
             {
-                JournalEntry je = JournalEntry.GetLast(cmdrid, timestamp + TimeSpan.FromSeconds(2), e =>
+                JournalEntry je = JournalEntryDB.GetLast(cmdrid, timestamp + TimeSpan.FromSeconds(2), e =>
                     e is JournalScreenshot ||
                     e is JournalSupercruiseEntry ||
                     e is JournalSupercruiseExit ||
@@ -99,8 +99,8 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
                     Body = body
                 });
 
-                ss = JournalEntry.CreateJournalEntry(jo.ToString()) as JournalScreenshot;
-                ss.Add();
+                // TBD ss = JournalEntry.CreateJournalEntry(jo.ToString()) as JournalScreenshot;
+                // TBD ss.Add();
             }
 
             return ss;

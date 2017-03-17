@@ -56,8 +56,8 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
 
         public void UpdateEDSMFirstDiscover(bool firstdiscover)
         {
-            jEventData["EDD_EDSMFirstDiscover"] = firstdiscover;
-            Update();
+          //TBD  jEventData["EDD_EDSMFirstDiscover"] = firstdiscover;
+            //TBD Update();
             EDSMFirstDiscover = firstdiscover;
         }
     }
