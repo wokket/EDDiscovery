@@ -120,7 +120,7 @@ namespace EDDiscovery2.EDSM
                                 if (edsmid != 0 && he.System.id_edsm <= 0)
                                 {
                                     he.System.id_edsm = edsmid;
-                                    EDDiscovery.EliteDangerous.JournalEntry.UpdateEDSMIDPosJump(he.Journalid, he.System, false, -1);
+                                    EDDiscovery.EliteDangerous.JournalEntryDB.UpdateEDSMIDPosJump(he.Journalid, he.System, false, -1);
                                 }
 
                                 if (firstdiscover)
@@ -319,7 +319,7 @@ namespace EDDiscovery2.EDSM
                     if (edsmid != 0 && he.System.id_edsm <= 0)
                     {
                         he.System.id_edsm = edsmid;
-                        EDDiscovery.EliteDangerous.JournalEntry.UpdateEDSMIDPosJump(he.Journalid, he.System, false, -1);
+                        EDDiscovery.EliteDangerous.JournalEntryDB.UpdateEDSMIDPosJump(he.Journalid, he.System, false, -1);
                     }
 
                     if (firstdiscover)

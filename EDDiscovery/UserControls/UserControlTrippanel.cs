@@ -299,12 +299,12 @@ namespace EDDiscovery.UserControls
                         return;
 
                     he.StartMarker = true;
-                    EliteDangerous.JournalEntry.UpdateSyncFlagBit(he.Journalid, EliteDangerous.SyncFlags.StartMarker, he.StartMarker);
+                    EliteDangerous.JournalEntryDB.UpdateSyncFlagBit(he.Journalid, EliteDangerous.SyncFlags.StartMarker, he.StartMarker);
                     if (list.Count() > 1 && he.isTravelling)
                     {
                         he = list.ToArray()[1];
                         he.StopMarker = true;
-                        EliteDangerous.JournalEntry.UpdateSyncFlagBit(he.Journalid, EliteDangerous.SyncFlags.StopMarker, he.StopMarker);
+                        EliteDangerous.JournalEntryDB.UpdateSyncFlagBit(he.Journalid, EliteDangerous.SyncFlags.StopMarker, he.StopMarker);
                     }
                     discoveryform.RefreshHistoryAsync();
                 }

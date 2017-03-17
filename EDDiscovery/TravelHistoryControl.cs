@@ -367,7 +367,7 @@ namespace EDDiscovery
         void MaterialCommodityChangeCount(List<MaterialCommodities> changelist)
         {
             HistoryEntry he = userControlTravelGrid.GetCurrentHistoryEntry;
-            long jid = JournalEntry.AddEDDItemSet(EDDiscoveryForm.EDDConfig.CurrentCommander.Nr, he.EventTimeUTC, (he.EntryType == JournalTypeEnum.EDDItemSet) ? he.Journalid : 0, changelist);
+            long jid = JournalEntryDB.AddEDDItemSet(EDDiscoveryForm.EDDConfig.CurrentCommander.Nr, he.EventTimeUTC, (he.EntryType == JournalTypeEnum.EDDItemSet) ? he.Journalid : 0, changelist);
             userControlTravelGrid.SetPreferredJIDAfterRefresh(jid);         // tell the main grid, please find and move here
             MaterialCommodity.LoadCacheList();        // in case we did anything..
             _discoveryForm.RefreshHistoryAsync();

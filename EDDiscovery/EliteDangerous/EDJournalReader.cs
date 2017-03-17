@@ -81,9 +81,9 @@ namespace EDDiscovery.EliteDangerous
                 }
             }
 
-            if (je.je.EventTypeID == JournalTypeEnum.Fileheader)
+            if (je.entry.EventTypeID == JournalTypeEnum.Fileheader)
             {
-                JournalEvents.JournalFileheader header = (JournalEvents.JournalFileheader)je.je;
+                JournalEvents.JournalFileheader header = (JournalEvents.JournalFileheader)je.entry;
 
                 if (header.Beta && !disable_beta_commander_check)
                 {
@@ -92,7 +92,7 @@ namespace EDDiscovery.EliteDangerous
 
                 if (header.Part > 1)
                 {
-                    JournalEvents.JournalContinued contd = JournalEntryDB.GetLast<JournalEvents.JournalContinued>(je.je.EventTimeUTC.AddSeconds(1), e => e.Part == header.Part);
+                    JournalEvents.JournalContinued contd = JournalEntryDB.GetLast<JournalEvents.JournalContinued>(je.entry.EventTimeUTC.AddSeconds(1), e => e.Part == header.Part);
 
                     // Carry commander over from previous log if it ends with a Continued event.
                     if (contd != null && Math.Abs(header.EventTimeUTC.Subtract(contd.EventTimeUTC).TotalSeconds) < 5 && contd.CommanderId >= 0)
@@ -101,9 +101,9 @@ namespace EDDiscovery.EliteDangerous
                     }
                 }
             }
-            else if (je.je.EventTypeID == JournalTypeEnum.LoadGame)
+            else if (je.entry.EventTypeID == JournalTypeEnum.LoadGame)
             {
-                string newname = (je.je as JournalEvents.JournalLoadGame).LoadGameCommander;
+                string newname = (je.entry as JournalEvents.JournalLoadGame).LoadGameCommander;
 
                 if ((TravelLogUnit.type & 0x8000) == 0x8000)
                 {
@@ -135,8 +135,8 @@ namespace EDDiscovery.EliteDangerous
                 }
             }
 
-            je.je.TLUId = (int)TravelLogUnit.id;
-            je.je.CommanderId = cmdrid;
+            je.entry.TLUId = (int)TravelLogUnit.id;
+            je.entry.CommanderId = cmdrid;
 
             return je;
         }
@@ -146,7 +146,7 @@ namespace EDDiscovery.EliteDangerous
             if (StartEntries.Count != 0 && this.TravelLogUnit.CommanderId != null && this.TravelLogUnit.CommanderId >= 0)
             {
                 jent = StartEntries.Dequeue();
-                jent.je.CommanderId = (int)TravelLogUnit.CommanderId;
+                jent.entry.CommanderId = (int)TravelLogUnit.CommanderId;
                 return true;
             }
 
@@ -155,7 +155,7 @@ namespace EDDiscovery.EliteDangerous
                 if (jent == null)
                     continue;
 
-                if ((this.TravelLogUnit.CommanderId == null || this.TravelLogUnit.CommanderId < 0) && jent.je.EventTypeID != JournalTypeEnum.LoadGame)
+                if ((this.TravelLogUnit.CommanderId == null || this.TravelLogUnit.CommanderId < 0) && jent.entry.EventTypeID != JournalTypeEnum.LoadGame)
                 {
                     StartEntries.Enqueue(jent);
                     continue;

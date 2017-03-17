@@ -412,7 +412,7 @@ namespace EDDiscovery
             {
                 MapColour = v;
                 if (Journalid != 0)
-                    EliteDangerous.JournalEntry.UpdateMapColour(Journalid, v);
+                    EliteDangerous.JournalEntryDB.UpdateMapColour(Journalid, v);
             }
         }
 
@@ -420,7 +420,7 @@ namespace EDDiscovery
         {
             if (Journalid != 0)
             {
-                EliteDangerous.JournalEntry.UpdateCommanderID(Journalid, v);
+                EliteDangerous.JournalEntryDB.UpdateCommanderID(Journalid, v);
             }
         }
 
@@ -429,7 +429,7 @@ namespace EDDiscovery
             EdsmSync = true;
             if (Journalid != 0)
             {
-                EliteDangerous.JournalEntry.UpdateSyncFlagBit(Journalid, EliteDangerous.SyncFlags.EDSM, true );
+                EliteDangerous.JournalEntryDB.UpdateSyncFlagBit(Journalid, EliteDangerous.SyncFlags.EDSM, true );
             }
         }
         public void SetEddnSync()
@@ -437,20 +437,18 @@ namespace EDDiscovery
             EDDNSync = true;
             if (Journalid != 0)
             {
-                EliteDangerous.JournalEntry.UpdateSyncFlagBit(Journalid, EliteDangerous.SyncFlags.EDDN, true);
+                EliteDangerous.JournalEntryDB.UpdateSyncFlagBit(Journalid, EliteDangerous.SyncFlags.EDDN, true);
             }
         }
 
         public void SetFirstDiscover(bool firstdiscover = true)
         {
-            IsEDSMFirstDiscover = firstdiscover;
-            if (journalEntry != null)
+            JournalLocOrJump jl = journalEntry as JournalLocOrJump;
+
+            if (jl != null)
             {
-                JournalLocOrJump jl = journalEntry as JournalLocOrJump;
-                if (jl != null)
-                {
-                    jl.UpdateEDSMFirstDiscover(firstdiscover);
-                }
+                IsEDSMFirstDiscover = jl.EDSMFirstDiscover = firstdiscover;
+                JournalEntryDB.SetFirstDiscover(jl.Id, firstdiscover);
             }
         }
 
@@ -860,7 +858,7 @@ namespace EDDiscovery
                     bool updatepos = (he.EntryType == EliteDangerous.JournalTypeEnum.FSDJump || he.EntryType == EliteDangerous.JournalTypeEnum.Location) && !syspos.System.HasCoordinate && edsmsys.HasCoordinate;
 
                     if (updatepos || updateedsmid)
-                        EliteDangerous.JournalEntry.UpdateEDSMIDPosJump(he.Journalid, edsmsys, updatepos, -1 , uconn);  // update pos and edsmid, jdist not updated
+                        EliteDangerous.JournalEntryDB.UpdateEDSMIDPosJump(he.Journalid, edsmsys, updatepos, -1 , uconn);  // update pos and edsmid, jdist not updated
 
                     he.System = edsmsys;
                 }
@@ -976,22 +974,22 @@ namespace EDDiscovery
                 {
                     if (he.StartMarker)
                     {
-                        EliteDangerous.JournalEntry.UpdateSyncFlagBit(hs.Journalid, EliteDangerous.SyncFlags.StartMarker, false);
+                        EliteDangerous.JournalEntryDB.UpdateSyncFlagBit(hs.Journalid, EliteDangerous.SyncFlags.StartMarker, false);
                         he.StartMarker = false;
                     }
                     else if (he.StopMarker)
                     {
-                        EliteDangerous.JournalEntry.UpdateSyncFlagBit(hs.Journalid, EliteDangerous.SyncFlags.StopMarker, false);
+                        EliteDangerous.JournalEntryDB.UpdateSyncFlagBit(hs.Journalid, EliteDangerous.SyncFlags.StopMarker, false);
                         he.StopMarker = false;
                     }
                     else if (started == false)
                     {
-                        EliteDangerous.JournalEntry.UpdateSyncFlagBit(hs.Journalid, EliteDangerous.SyncFlags.StartMarker, true);
+                        EliteDangerous.JournalEntryDB.UpdateSyncFlagBit(hs.Journalid, EliteDangerous.SyncFlags.StartMarker, true);
                         he.StartMarker = true;
                     }
                     else
                     {
-                        EliteDangerous.JournalEntry.UpdateSyncFlagBit(hs.Journalid, EliteDangerous.SyncFlags.StopMarker, true);
+                        EliteDangerous.JournalEntryDB.UpdateSyncFlagBit(hs.Journalid, EliteDangerous.SyncFlags.StopMarker, true);
                         he.StopMarker = true;
                     }
 
@@ -1124,7 +1122,7 @@ namespace EDDiscovery
 
                     if (jfsd != null)
                     {
-                        EliteDangerous.JournalEntry.UpdateEDSMIDPosJump(jfsd.Id, he.System, !jfsd.HasCoordinate && he.System.HasCoordinate, jfsd.JumpDist);
+                        EliteDangerous.JournalEntryDB.UpdateEDSMIDPosJump(jfsd.Id, he.System, !jfsd.HasCoordinate && he.System.HasCoordinate, jfsd.JumpDist);
                     }
                 }
 
@@ -1220,7 +1218,7 @@ namespace EDDiscovery
                             EliteDangerous.JournalEvents.JournalFSDJump jfsd = je as EliteDangerous.JournalEvents.JournalFSDJump;
                             if (jfsd != null)
                             {
-                                EliteDangerous.JournalEntry.UpdateEDSMIDPosJump(jfsd.Id, he.System, !jfsd.HasCoordinate && he.System.HasCoordinate, jfsd.JumpDist, conn, txn);
+                                EliteDangerous.JournalEntryDB.UpdateEDSMIDPosJump(jfsd.Id, he.System, !jfsd.HasCoordinate && he.System.HasCoordinate, jfsd.JumpDist, conn, txn);
                             }
                         }
 

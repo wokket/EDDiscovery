@@ -411,7 +411,6 @@ namespace EDDiscovery.EliteDangerous
 
         #endregion
 
-        #region Misc
 
         static public JournalTypeEnum JournalString2Type(string str)
         {
@@ -424,35 +423,6 @@ namespace EDDiscovery.EliteDangerous
             return JournalTypeEnum.Unknown;
         }
 
-        #endregion
-
-        public static void UpdateEDSMIDPosJump(long journalid, ISystem system, bool jsonpos, double dist, SQLiteConnectionUser cn = null, DbTransaction tn = null)
-        {
-
-        }
-
-        public static void UpdateSyncFlagBit(long journalid, SyncFlags bit, bool value)
-        {
-        }
-
-        public static void UpdateCommanderID(long journalid, int cmdrid)
-        {
-            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
-            {
-                using (DbCommand cmd = cn.CreateCommand("Update JournalEntries set CommanderID = @cmdrid where ID=@journalid"))
-                {
-                    cmd.AddParameterWithValue("@journalid", journalid);
-                    cmd.AddParameterWithValue("@cmdrid", cmdrid);
-                    System.Diagnostics.Trace.WriteLine(string.Format("Update cmdr id ID {0} with map colour", journalid));
-                    SQLiteDBClass.SQLNonQueryText(cn, cmd);
-                }
-            }
-        }
-
-        public static long AddEDDItemSet(int cmdrid, DateTime dt, long jidofitemset, List<MaterialCommodities> changelist)     // add item, return journal ID
-        {
-            return 0;
-        }
 
         static public List<string> GetListOfEventsWithOptMethod(bool towords, string method = null, string method2 = null)
         {
@@ -491,18 +461,18 @@ namespace EDDiscovery.EliteDangerous
 
     public class JournalEntryDB
     {
-        public JournalEntry je;
+        public JournalEntry entry;
 
         public JObject jEventData { get; protected set; }       // event objects
         public string EventDataString { get { return jEventData.ToString(); } }     // Get only, functions will modify them to add additional data on
 
-        public JournalEntryDB(JournalEntry jep, JObject jo )
+        public JournalEntryDB(JournalEntry jep, JObject jo)
         {
-            je = jep;
+            entry = jep;
             jEventData = jo;
         }
 
-        public static JournalEntryDB Create(string s )
+        public static JournalEntryDB Create(string s)
         {
             JObject jo = (JObject)JObject.Parse(s);
             return new JournalEntryDB(JournalEntry.CreateJournalEntry(jo), jo);
@@ -530,9 +500,9 @@ namespace EDDiscovery.EliteDangerous
             jo["StarPos"] = new JArray(x, y, z);
             jo["EDDMapColor"] = mc;
             JournalEntryDB jdb = new JournalEntryDB(JournalEntry.CreateJournalEntry(jo), jo);
-            jdb.je.TLUId = tluid;
-            jdb.je.CommanderId = cmdrid;
-            jdb.je.Synced = syncflag;
+            jdb.entry.TLUId = tluid;
+            jdb.entry.CommanderId = cmdrid;
+            jdb.entry.Synced = syncflag;
             return jdb;
         }
 
@@ -549,20 +519,20 @@ namespace EDDiscovery.EliteDangerous
         {
             using (DbCommand cmd = cn.CreateCommand("Insert into JournalEntries (EventTime, TravelLogID, CommanderId, EventTypeId , EventType, EventData, EdsmId, Synced) values (@EventTime, @TravelLogID, @CommanderID, @EventTypeId , @EventStrName, @EventData, @EdsmId, @Synced)", tn))
             {
-                cmd.AddParameterWithValue("@EventTime", je.EventTimeUTC);           // MUST use UTC connection
-                cmd.AddParameterWithValue("@TravelLogID", je.TLUId);
-                cmd.AddParameterWithValue("@CommanderID", je.CommanderId);
-                cmd.AddParameterWithValue("@EventTypeId", je.EventTypeID);
-                cmd.AddParameterWithValue("@EventStrName", je.EventTypeStr);
+                cmd.AddParameterWithValue("@EventTime", entry.EventTimeUTC);           // MUST use UTC connection
+                cmd.AddParameterWithValue("@TravelLogID", entry.TLUId);
+                cmd.AddParameterWithValue("@CommanderID", entry.CommanderId);
+                cmd.AddParameterWithValue("@EventTypeId", entry.EventTypeID);
+                cmd.AddParameterWithValue("@EventStrName", entry.EventTypeStr);
                 cmd.AddParameterWithValue("@EventData", EventDataString);
-                cmd.AddParameterWithValue("@EdsmId", je.EdsmID);
-                cmd.AddParameterWithValue("@Synced", je.Synced);
+                cmd.AddParameterWithValue("@EdsmId", entry.EdsmID);
+                cmd.AddParameterWithValue("@Synced", entry.Synced);
 
                 SQLiteDBClass.SQLNonQueryText(cn, cmd);
 
                 using (DbCommand cmd2 = cn.CreateCommand("Select Max(id) as id from JournalEntries"))
                 {
-                    je.Id = (int)(long)SQLiteDBClass.SQLScalar(cn, cmd2);
+                    entry.Id = (int)(long)SQLiteDBClass.SQLScalar(cn, cmd2);
                 }
                 return true;
             }
@@ -580,15 +550,15 @@ namespace EDDiscovery.EliteDangerous
         {
             using (DbCommand cmd = cn.CreateCommand("Update JournalEntries set EventTime=@EventTime, TravelLogID=@TravelLogID, CommanderID=@CommanderID, EventTypeId=@EventTypeId, EventType=@EventStrName, EventData=@EventData, EdsmId=@EdsmId, Synced=@Synced where ID=@id", tn))
             {
-                cmd.AddParameterWithValue("@ID", je.Id);
-                cmd.AddParameterWithValue("@EventTime", je.EventTimeUTC);  // MUST use UTC connection
-                cmd.AddParameterWithValue("@TravelLogID", je.TLUId);
-                cmd.AddParameterWithValue("@CommanderID", je.CommanderId);
-                cmd.AddParameterWithValue("@EventTypeId", je.EventTypeID);
-                cmd.AddParameterWithValue("@EventStrName", je.EventTypeStr);
+                cmd.AddParameterWithValue("@ID", entry.Id);
+                cmd.AddParameterWithValue("@EventTime", entry.EventTimeUTC);  // MUST use UTC connection
+                cmd.AddParameterWithValue("@TravelLogID", entry.TLUId);
+                cmd.AddParameterWithValue("@CommanderID", entry.CommanderId);
+                cmd.AddParameterWithValue("@EventTypeId", entry.EventTypeID);
+                cmd.AddParameterWithValue("@EventStrName", entry.EventTypeStr);
                 cmd.AddParameterWithValue("@EventData", EventDataString);
-                cmd.AddParameterWithValue("@EdsmId", je.EdsmID);
-                cmd.AddParameterWithValue("@Synced", je.Synced);
+                cmd.AddParameterWithValue("@EdsmId", entry.EdsmID);
+                cmd.AddParameterWithValue("@Synced", entry.Synced);
                 SQLiteDBClass.SQLNonQueryText(cn, cmd);
 
                 return true;
@@ -660,7 +630,7 @@ namespace EDDiscovery.EliteDangerous
                     foreach (DataRow dr in ds.Tables[0].Rows)
                     {
                         JObject jo = (JObject)JObject.Parse((string)dr["EventData"]);
-                        list.Add(JournalEntry.CreateJournalEntry(dr,jo));
+                        list.Add(JournalEntry.CreateJournalEntry(dr, jo));
                     }
 
                     return list;
@@ -750,9 +720,9 @@ namespace EDDiscovery.EliteDangerous
                         while (reader.Read())
                         {
                             JournalEntryDB ent = Create(reader);
-                            if (filter(ent.je))
+                            if (filter(ent.entry))
                             {
-                                return ent.je;
+                                return ent.entry;
                             }
                         }
                     }
@@ -781,9 +751,9 @@ namespace EDDiscovery.EliteDangerous
                         while (reader.Read())
                         {
                             JournalEntryDB ent = Create(reader);
-                            if (filter(ent.je))
+                            if (filter(ent.entry))
                             {
-                                return ent.je;
+                                return ent.entry;
                             }
                         }
                     }
@@ -842,10 +812,10 @@ namespace EDDiscovery.EliteDangerous
             {
                 using (DbCommand cmd = cn.CreateCommand("SELECT * FROM JournalEntries WHERE CommanderId = @cmdrid AND EventTime = @time AND TravelLogId = @tluid AND EventTypeId = @evttype ORDER BY Id ASC"))
                 {
-                    cmd.AddParameterWithValue("@cmdrid", ent.je.CommanderId);
-                    cmd.AddParameterWithValue("@time", ent.je.EventTimeUTC);
-                    cmd.AddParameterWithValue("@tluid", ent.je.TLUId);
-                    cmd.AddParameterWithValue("@evttype", ent.je.EventTypeID);
+                    cmd.AddParameterWithValue("@cmdrid", ent.entry.CommanderId);
+                    cmd.AddParameterWithValue("@time", ent.entry.EventTimeUTC);
+                    cmd.AddParameterWithValue("@tluid", ent.entry.TLUId);
+                    cmd.AddParameterWithValue("@evttype", ent.entry.EventTypeID);
                     using (DbDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -910,6 +880,19 @@ namespace EDDiscovery.EliteDangerous
             }
         }
 
+        public static void SetEDSMID(long jid, long edsmid)
+        {
+            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
+            {
+                using (DbCommand cmd = cn.CreateCommand("UPDATE JournalEntries SET EdsmId=@edsm WHERE ID=@JID"))
+                {
+                    cmd.AddParameterWithValue("@edsm", edsmid);
+                    cmd.AddParameterWithValue("@JID", jid);
+                    SQLiteDBClass.SQLNonQueryText(cn, cmd);
+                }
+            }
+        }
+
         static public bool ResetCommanderID(int from, int to)
         {
             using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
@@ -930,8 +913,169 @@ namespace EDDiscovery.EliteDangerous
 
         public static void UpdateMapColour(long journalid, int mapcolour)
         {
+            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
+            {
+                JournalEntryDB ent = GetDB(journalid, cn);
+
+                if (ent != null)
+                {
+                    ent.jEventData["EDDMapColor"] = mapcolour;
+
+                    using (DbCommand cmd2 = cn.CreateCommand("Update JournalEntries set EventData = @EventData where ID = @ID"))
+                    {
+                        cmd2.AddParameterWithValue("@ID", journalid);
+                        cmd2.AddParameterWithValue("@EventData", ent.jEventData.ToString());
+
+                        System.Diagnostics.Trace.WriteLine(string.Format("Update journal ID {0} with map colour", journalid));
+                        SQLiteDBClass.SQLNonQueryText(cn, cmd2);
+                    }
+                }
+            }
         }
 
+        public static void SetFirstDiscover(long journalid, bool flag)
+        {
+            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
+            {
+                JournalEntryDB ent = GetDB(journalid, cn);
 
+                if (ent != null)
+                {
+                    ent.jEventData["EDD_EDSMFirstDiscover"] = flag;
+
+                    using (DbCommand cmd2 = cn.CreateCommand("Update JournalEntries set EventData = @EventData where ID = @ID"))
+                    {
+                        cmd2.AddParameterWithValue("@ID", journalid);
+                        cmd2.AddParameterWithValue("@EventData", ent.jEventData.ToString());
+
+                        System.Diagnostics.Trace.WriteLine(string.Format("Update journal ID {0} with first discovery", journalid));
+                        SQLiteDBClass.SQLNonQueryText(cn, cmd2);
+                    }
+                }
+            }
+        }
+
+        public static void UpdateSyncFlagBit(long journalid, SyncFlags bit, bool value)
+        {
+            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
+            {
+                JournalEntryDB je = GetDB(journalid, cn);
+
+                if (je != null)
+                {
+                    if (value)
+                        je.entry.Synced |= (int)bit;
+                    else
+                        je.entry.Synced &= ~(int)bit;
+
+                    using (DbCommand cmd = cn.CreateCommand("Update JournalEntries set Synced = @sync where ID=@journalid"))
+                    {
+                        cmd.AddParameterWithValue("@journalid", journalid);
+                        cmd.AddParameterWithValue("@sync", je.entry.Synced);
+                        System.Diagnostics.Trace.WriteLine(string.Format("Update sync flag ID {0} with {1}", journalid, je.entry.Synced));
+                        SQLiteDBClass.SQLNonQueryText(cn, cmd);
+                    }
+                }
+            }
+        }
+
+        public static void UpdateCommanderID(long journalid, int cmdrid)
+        {
+            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
+            {
+                using (DbCommand cmd = cn.CreateCommand("Update JournalEntries set CommanderID = @cmdrid where ID=@journalid"))
+                {
+                    cmd.AddParameterWithValue("@journalid", journalid);
+                    cmd.AddParameterWithValue("@cmdrid", cmdrid);
+                    System.Diagnostics.Trace.WriteLine(string.Format("Update cmdr id ID {0} with map colour", journalid));
+                    SQLiteDBClass.SQLNonQueryText(cn, cmd);
+                }
+            }
+        }
+
+        public static void UpdateEDSMIDPosJump(long journalid, ISystem system, bool jsonpos, double dist, SQLiteConnectionUser cn = null, DbTransaction tn = null)
+        {
+            bool ownconn = false;
+
+            try
+            {
+                if (cn == null)
+                {
+                    ownconn = true;
+                    cn = new SQLiteConnectionUser(utc: true);
+                }
+
+                JournalEntryDB ent = GetDB(journalid, cn, tn);
+
+                if (ent != null)
+                {
+                    JObject jo = ent.jEventData;
+
+                    if (jsonpos)
+                    {
+                        jo["StarPos"] = new JArray() { system.x, system.y, system.z };
+                        jo["StarPosFromEDSM"] = true;
+                    }
+
+                    if (dist > 0)
+                        jo["JumpDist"] = dist;
+
+                    using (DbCommand cmd2 = cn.CreateCommand("Update JournalEntries set EventData = @EventData, EdsmId = @EdsmId where ID = @ID", tn))
+                    {
+                        cmd2.AddParameterWithValue("@ID", journalid);
+                        cmd2.AddParameterWithValue("@EventData", jo.ToString());
+                        cmd2.AddParameterWithValue("@EdsmId", system.id_edsm);
+
+                        //System.Diagnostics.Trace.WriteLine(string.Format("Update journal ID {0} with pos {1}/edsmid {2} dist {3}", journalid, jsonpos, system.id_edsm, dist));
+                        cmd2.ExecuteNonQuery();
+                    }
+                }
+            }
+            finally
+            {
+                if (ownconn)
+                {
+                    cn.Dispose();
+                }
+            }
+        }
+
+        public static long AddEDDItemSet(int cmdrid, DateTime dt, long jidofitemset, List<MaterialCommodities> changelist)     // add item, return journal ID
+        {
+            using (SQLiteConnectionUser cn = new SQLiteConnectionUser(utc: true))
+            {
+                JournalEntryDB jdb;
+
+                if (jidofitemset > 0)                                       // 0 means currently not on an item..
+                    jdb= GetDB(jidofitemset, cn);
+                else
+                {
+                    JObject jo = new JObject();
+                    jo["timestamp"] = dt;
+                    jo["event"] = JournalTypeEnum.EDDItemSet.ToString();
+                    jdb = new JournalEntryDB(new JournalEDDItemSet(jo), jo);
+                    jdb.entry.CommanderId = cmdrid;
+                }
+
+                JournalEDDItemSet jedd = jdb.entry as JournalEDDItemSet;
+
+                foreach (MaterialCommodities mc in changelist)              // reset the list to these.. or add on if there are more
+                {
+                    if (mc.category.Equals(MaterialCommodities.CommodityCategory))
+                        jedd.Commodities.Set(mc.fdname, mc.count, mc.price);
+                    else
+                        jedd.Materials.Set(mc.category, mc.fdname, mc.count);
+                }
+
+                jdb.jEventData = jedd.UpdateState(jdb.jEventData);
+
+                if (jidofitemset > 0)
+                    jdb.Update(cn);
+                else
+                    jdb.Add(cn);
+
+                return jdb.entry.Id;
+            }
+        }
     }
 }

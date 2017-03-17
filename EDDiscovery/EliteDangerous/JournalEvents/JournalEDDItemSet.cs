@@ -22,22 +22,17 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
     [JournalEntryType(JournalTypeEnum.EDDItemSet)]
     public class JournalEDDItemSet : JournalEntry, IMaterialCommodityJournalEntry
     {
-        JObject jEventData;
-
         public JournalEDDItemSet(JObject evt) : base(evt, JournalTypeEnum.EDDItemSet)
         {
             Materials = new MaterialList(evt["Materials"]?.ToObject<MaterialItem[]>().ToList());
             Commodities = new CommodityList(evt["Commodities"]?.ToObject<CommodityItem[]>().ToList());
-            jEventData = evt;
         }
 
         public MaterialList Materials { get; set; }
         public CommodityList Commodities { get; set; }
 
-        public void UpdateState()                      // calculates the JSON string and returns it, plus updates the class so as it would look when loaded
+        public JObject UpdateState(JObject evt)                      // calculates the JSON string and returns it, plus updates the class so as it would look when loaded
         {
-            JObject evt = jEventData;
-
             if (Materials != null)
             {
                 JArray ja = new JArray();
@@ -70,7 +65,7 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
                 evt["Commodities"] = ja;
             }
 
-            jEventData = evt;
+            return evt;
         }
 
         public void MaterialList(EDDiscovery2.DB.MaterialCommoditiesList mc, DB.SQLiteConnectionUser conn)

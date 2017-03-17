@@ -810,8 +810,8 @@ namespace EDDiscovery.UserControls
                 {
                     foreach (var jent in jents)
                     {
-                        jent.EdsmID = (int)form.AssignedEdsmId;
-                        //TBDjent.Update();
+                        JournalEntryDB.SetEDSMID(jent.Id, form.AssignedEdsmId);
+                        jent.EdsmID = form.AssignedEdsmId;
                     }
 
                     discoveryform.RefreshHistoryAsync();

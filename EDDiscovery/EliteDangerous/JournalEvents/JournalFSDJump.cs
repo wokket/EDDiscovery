@@ -67,7 +67,7 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
             if (!evt["Powers"].Empty())
                 Powers = evt.Value<JArray>("Powers").Values<string>().ToArray();
 
-            mapcolor = evt["EDDMapColor"].Int(EDDiscovery2.EDDConfig.Instance.DefaultMapColour);
+            MapColor = evt["EDDMapColor"].Int(EDDiscovery2.EDDConfig.Instance.DefaultMapColour);
         }
 
         public string Body { get; set; }
@@ -87,7 +87,7 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
         public string PowerplayState { get; set; }
         public string[] Powers { get; set; }
 
-        private int mapcolor;
+        public int MapColor { get; set; }
 
         public override void FillInformation(out string summary, out string info, out string detailed)  //V
         {
@@ -107,20 +107,6 @@ namespace EDDiscovery.EliteDangerous.JournalEvents
             info += " ";
             info += Tools.FieldBuilder("Body:", Body, "Faction:", Faction, "<state:", FactionState, "Allegiance:", Allegiance, "Economy:", econ);
             detailed = "";
-        }
-
-
-        public int MapColor
-        {
-            get
-            {
-                return mapcolor;
-            }
-            set
-            {
-                mapcolor = value;
-                //TBD write back?
-            }
         }
 
         public override System.Drawing.Bitmap Icon { get { return EDDiscovery.Properties.Resources.hyperspace; } }

@@ -96,13 +96,13 @@ namespace EDDiscovery.EliteDangerous
                     updateProgress(i * 100 / readersToUpdate.Count, reader.TravelLogUnit.Name);
 
                     List<JournalEntryDB> entries = reader.ReadJournalLog(true).ToList();      // this may create new commanders, and may write to the TLU db
-                    ILookup<DateTime, JournalEntryDB> existing = JournalEntryDB.GetAllDBByTLU(reader.TravelLogUnit.id).ToLookup(e => e.je.EventTimeUTC);
+                    ILookup<DateTime, JournalEntryDB> existing = JournalEntryDB.GetAllDBByTLU(reader.TravelLogUnit.id).ToLookup(e => e.entry.EventTimeUTC);
 
                     using (DbTransaction tn = cn.BeginTransaction())
                     {
                         foreach (JournalEntryDB je in entries)
                         {
-                            if (!existing[je.je.EventTimeUTC].Any(e => JournalEntryDB.AreSameEntry(je, e)))
+                            if (!existing[je.entry.EventTimeUTC].Any(e => JournalEntryDB.AreSameEntry(je, e)))
                             {
         //                        System.Diagnostics.Trace.WriteLine(string.Format("Write Journal to db {0} {1}", je.EventTimeUTC, je.EventTypeStr));
                                 je.Add(cn, tn);
@@ -530,9 +530,9 @@ namespace EDDiscovery.EliteDangerous
             {
                 foreach (var ent in entries)                    // pass them to the handler
                 {
-                    System.Diagnostics.Trace.WriteLine(string.Format("New entry {0} {1}", ent.je.EventTimeUTC, ent.je.EventTypeStr));
+                    System.Diagnostics.Trace.WriteLine(string.Format("New entry {0} {1}", ent.entry.EventTimeUTC, ent.entry.EventTypeStr));
                     if (OnNewJournalEntry != null)
-                        OnNewJournalEntry(ent.je);
+                        OnNewJournalEntry(ent.entry);
                 }
             }
         }
