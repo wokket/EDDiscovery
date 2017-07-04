@@ -72,6 +72,7 @@ namespace EDDiscovery
             this.addOnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.manageAddOnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.configureAddOnActionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editLastActionPackToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stopCurrentlyRunningActionProgramToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -116,7 +117,7 @@ namespace EDDiscovery
             this.notifyIconMenu_Open = new System.Windows.Forms.ToolStripMenuItem();
             this.notifyIconMenu_Hide = new System.Windows.Forms.ToolStripMenuItem();
             this.notifyIconMenu_Exit = new System.Windows.Forms.ToolStripMenuItem();
-            this.editLastActionPackToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.alienBaseHuntToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.panelInfo.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -155,7 +156,8 @@ namespace EDDiscovery
             this.editThemeToolStripMenuItem,
             this.materialSearchToolStripMenuItem,
             this.showAllPopoutsInTaskBarToolStripMenuItem,
-            this.exitToolStripMenuItem});
+            this.exitToolStripMenuItem,
+            this.alienBaseHuntToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.toolsToolStripMenuItem.Text = "&Tools";
@@ -356,6 +358,14 @@ namespace EDDiscovery
             this.configureAddOnActionsToolStripMenuItem.Size = new System.Drawing.Size(280, 22);
             this.configureAddOnActionsToolStripMenuItem.Text = "&Edit Add-On Action Files";
             this.configureAddOnActionsToolStripMenuItem.Click += new System.EventHandler(this.configureAddOnActionsToolStripMenuItem_Click);
+            // 
+            // editLastActionPackToolStripMenuItem
+            // 
+            this.editLastActionPackToolStripMenuItem.Image = global::EDDiscovery.Properties.Resources.Log;
+            this.editLastActionPackToolStripMenuItem.Name = "editLastActionPackToolStripMenuItem";
+            this.editLastActionPackToolStripMenuItem.Size = new System.Drawing.Size(280, 22);
+            this.editLastActionPackToolStripMenuItem.Text = "Edit Last Action Pack";
+            this.editLastActionPackToolStripMenuItem.Click += new System.EventHandler(this.editLastActionPackToolStripMenuItem_Click);
             // 
             // stopCurrentlyRunningActionProgramToolStripMenuItem
             // 
@@ -791,13 +801,12 @@ namespace EDDiscovery
             this.notifyIconMenu_Exit.Text = "E&xit";
             this.notifyIconMenu_Exit.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
-            // editLastActionPackToolStripMenuItem
+            // alienBaseHuntToolStripMenuItem
             // 
-            this.editLastActionPackToolStripMenuItem.Image = global::EDDiscovery.Properties.Resources.Log;
-            this.editLastActionPackToolStripMenuItem.Name = "editLastActionPackToolStripMenuItem";
-            this.editLastActionPackToolStripMenuItem.Size = new System.Drawing.Size(280, 22);
-            this.editLastActionPackToolStripMenuItem.Text = "Edit Last Action Pack";
-            this.editLastActionPackToolStripMenuItem.Click += new System.EventHandler(this.editLastActionPackToolStripMenuItem_Click);
+            this.alienBaseHuntToolStripMenuItem.Name = "alienBaseHuntToolStripMenuItem";
+            this.alienBaseHuntToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
+            this.alienBaseHuntToolStripMenuItem.Text = "Alien Base Hunt";
+            this.alienBaseHuntToolStripMenuItem.Click += new System.EventHandler(this.alienBaseHuntToolStripMenuItem_Click);
             // 
             // EDDiscoveryForm
             // 
@@ -919,5 +928,6 @@ namespace EDDiscovery
         private System.Windows.Forms.ToolStripSeparator helpMenuSeparatorTop;
         private System.Windows.Forms.ToolStripSeparator helpMenuSeparatorBottom;
         private System.Windows.Forms.ToolStripMenuItem editLastActionPackToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem alienBaseHuntToolStripMenuItem;
     }
 }

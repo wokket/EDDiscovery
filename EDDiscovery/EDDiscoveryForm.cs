@@ -42,6 +42,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using EDDiscovery.Trilateration2;
 
 namespace EDDiscovery
 {
@@ -1342,6 +1343,14 @@ namespace EDDiscovery
 
         #endregion
 
+        private void alienBaseHuntToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AlienBaseHunt frm = new AlienBaseHunt();
+
+            frm.trilaterationControl21.InitControl(this);
+            
+            frm.Show();
+        }
     }
 }
 

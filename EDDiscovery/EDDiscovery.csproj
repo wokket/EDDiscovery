@@ -417,6 +417,22 @@
     <Compile Include="ExportImport\ExportNotes.cs" />
     <Compile Include="ExportImport\ImportHistory.cs" />
     <Compile Include="TraceLog.cs" />
+    <Compile Include="Trilateration2\AlienBaseHunt.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Trilateration2\AlienBaseHunt.Designer.cs">
+      <DependentUpon>AlienBaseHunt.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Trilateration2\ReferencesSector.cs" />
+    <Compile Include="Trilateration2\ReferenceSystem.cs" />
+    <Compile Include="Trilateration2\SuggestedReferences.cs" />
+    <Compile Include="Trilateration2\Trilateration2.cs" />
+    <Compile Include="Trilateration2\TrilaterationControl2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Trilateration2\TrilaterationControl2.Designer.cs">
+      <DependentUpon>TrilaterationControl2.cs</DependentUpon>
+    </Compile>
     <Compile Include="Trilateration\DistanceParser.cs" />
     <Compile Include="Controls\SplitContainerCustom.cs">
       <SubType>Component</SubType>
@@ -994,6 +1010,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\UserControlForm.resx">
       <DependentUpon>UserControlForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Trilateration2\AlienBaseHunt.resx">
+      <DependentUpon>AlienBaseHunt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Trilateration2\TrilaterationControl2.resx">
+      <DependentUpon>TrilaterationControl2.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Trilateration\SysWarning.resx">
       <DependentUpon>SysWarning.cs</DependentUpon>
